@@ -3,7 +3,7 @@
 
 function testRootFunctions()
     
-    CodeaUnit.detailed = true
+    CodeaUnit.detailed = false
     CodeaUnit.skip = false
     -- local shouldWipeDebugDraw = false
     

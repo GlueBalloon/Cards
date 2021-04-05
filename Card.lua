@@ -38,8 +38,11 @@ function testCard()
         end)
 
         _:test("init with () is ace of spades", function()
-            local rightCard = card.suit == "spades" and card.rank == 1
+            local cardo = Card()
+            local rightCard = cardo.suit == "spades" and cardo.rank == 1
             _:expect(rightCard).is(true)
+            cardo.body:destroy()
+            cardo = nil
         end)
         
         _:test("'Card:shortName' of C10 is right", function()
@@ -60,7 +63,8 @@ function testCard()
         _:test("card retains last touch", function()
             card:touched(fakedTouch)
             local retained = fakedTouch == card.lastTouch
-            _:expect(retained).is(true)
+            _:expect("--a: touches aren't nil", fakedTouch ~= nil and card.lastTouch ~= nil).is(true)
+            _:expect("--b: card retains last touch", retained).is(true)
         end)
 
         _:test("debugDraw sends touch to card", function()
@@ -74,9 +78,10 @@ function testCard()
         _:test("tap ending on card flips it over", function()
             card.showing = card.back
             fakedTouch = fakeTouch(card.body.x +1, card.body.y +1, ENDED, 1)
-            debugDraw:addTouchToTouchMap(fakedTouch, card.body)
+            --debugDraw:addTouchToTouchMap(fakedTouch, card.body)
             debugDraw:touched(fakedTouch)
-            _:expect(card.showing == card.face).is(true)
+            print(card.showing, card.face)
+            _:expect(tostring(card.showing) == tostring(card.face)).is(true)
         end)       
     end)
 end
