@@ -14,6 +14,8 @@ function testPhysicsDebug()
             card2 = Card(7, "clubs")
             debugDraw:addBody(card2.body)
             debugDraw:addBody(card.body)
+            cardTable:addCard(card)
+            cardTable:addCard(card2)
             fakeBeginTouch = fakeTouch(100, 800, BEGAN, 1, 4373)
             fakeMovingTouch = fakeTouch(200, 700, MOVING, 1, 4373, fakeBeginTouch.pos)
             fakeEndTouch = fakeTouch(300, 600, ENDED, 1, 4373, fakeMovingTouch.pos)
@@ -24,8 +26,8 @@ function testPhysicsDebug()
             desiredString = ""
             remove(debugDraw.bodies, card.body)
             remove(debugDraw.bodies, card2.body)
-            remove(cardTable.cards, card)
-            remove(cardTable.cards, card2)
+            cardTable:removeCard(card)
+            cardTable:removeCard(card2)
             card.body:destroy()
             card2.body:destroy()
             card, card2 = nil, nil
@@ -387,11 +389,12 @@ function PhysicsDebugDraw:touched(touch)
     --print("PDD touched")
     --grab the touch as a vec2
     local touchPoint = vec2(touch.pos.x, touch.pos.y)
+    local firstBodyTouched
     local returnValue = false
     --print("PDD set touchPoint")
     --when a touch starts on a dynamic body, log it in touchMap
     if touch.state == BEGAN then
-        print("PDD detected beginning touch")
+    --    print("PDD detected beginning touch")
         --[[
         for i,body in ipairs(self.bodies) do
         if body.type == DYNAMIC and body:testPoint(touchPoint) then
@@ -403,15 +406,16 @@ function PhysicsDebugDraw:touched(touch)
       --  for _,body in ipairs(self.bodies) do
         for i=#self.bodies, 1, -1 do
             local body = self.bodies[i]
-            if body.type == DYNAMIC and body:testPoint(touchPoint) and self.touchMap[touch.id] == nil then
+            if body.type == DYNAMIC and body:testPoint(touchPoint) then
                 -- self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
                 --i think this is adding the same table forvthe same id key 52 times...
                 self:addTouchToTouchMap(touch, body)
                 table.remove(self.bodies, i)
                 table.insert(self.bodies, body)
                 --maybe not now?
-           --     break --well maybe but still... messes with which card detects touch...
                 returnValue = true
+                firstBodyTouched = body
+                break
             end
         end
     elseif touch.state == MOVING and self.touchMap[touch.id] then
@@ -469,8 +473,8 @@ function PhysicsDebugDraw:touched(touch)
     end
     
     if(returnValue == true) then
-        --print("sent touch to card table from debugDraw")
-        cardTable:touched(touch, self.bodies)
+      --  print("sent touch to card table from debugDraw")
+        cardTable:touched(touch, self.bodies, firstBodyTouched)
     end
     --print("PDD about to return value")
     return returnValue

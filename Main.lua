@@ -156,18 +156,12 @@ function remove(targetTable, removeMe)
             end
             --if collapsing needs to happen...
             if shouldMoveDown then
-                --check if we're not at the end
-               -- if i ~= #targetTable then
-                    --if not, copy the next value over this one
-                    targetTable[i] = targetTable[i+1]
-             --   else
-                    --if so, delete the last value
-             --       targetTable[#targetTable] = nil
-           --     end 
+                --copy the next value over this one
+                targetTable[i] = targetTable[i+1]
             end
         end
     else
-        --loop over elements
+        --if not an array, loop over elements
         for k, v in pairs(targetTable) do
             --check for thing to remove
             if (v == removeMe) then

@@ -12,13 +12,13 @@ function testCard()
             card = Card(7, "hearts")
             fakedTouch = fakeTouch()
             debugDraw:addBody(card.body)
-            table.insert(cardTable.cards, card)
+            cardTable:addCard(card)
         end)
         
         _:after(function()
             debugDraw.touchMap[fakedTouch.id] = nil
             remove(debugDraw.bodies, card.body)
-            remove(cardTable.cards, card)
+            cardTable:removeCard(card)
             card.body:destroy()
             card = nil
             fakedTouch = nil
@@ -31,9 +31,9 @@ function testCard()
         ]]
         
         _:test("init with (1, allSuits[1]) is ace of spades", function()
-            remove(cardTable.cards, card) --without this the card from _:before() hangs around in cardTable
-            card = Card(1, Card.allSuits[1])
-            local rightCard = card.suit == "spades" and card.rank == 1
+            --remove(cardTable.cards, card) --without this the card from _:before() hangs around in cardTable
+            local newCard = Card(1, Card.allSuits[1])
+            local rightCard = newCard.suit == "spades" and newCard.rank == 1
             _:expect(rightCard).is(true)
         end)
 
@@ -46,9 +46,9 @@ function testCard()
         end)
         
         _:test("'Card:shortName' of C10 is right", function()
-            remove(cardTable.cards, card) --without this the card from _:before() hangs around in cardTable
-            card = Card(10, Card.allSuits[4])
-            local shortName = card:shortName()
+           -- remove(cardTable.cards, card) --without this the card from _:before() hangs around in cardTable
+           local cardy = Card(10, Card.allSuits[4])
+            local shortName = cardy:shortName()
             _:expect(shortName == "C10").is(true)
         end)
         
@@ -68,6 +68,8 @@ function testCard()
         end)
 
         _:test("debugDraw sends touch to card", function()
+            card.body.x = WIDTH * 0.95
+            card.body.y = HEIGHT * 0.95
             fakedTouch.pos.x = card.body.x +1
             fakedTouch.pos.y = card.body.y +1
             debugDraw:touched(fakedTouch)
@@ -80,7 +82,7 @@ function testCard()
             fakedTouch = fakeTouch(card.body.x +1, card.body.y +1, ENDED, 1)
             --debugDraw:addTouchToTouchMap(fakedTouch, card.body)
             debugDraw:touched(fakedTouch)
-            print(card.showing, card.face)
+            --print(card.showing, card.face)
             _:expect(tostring(card.showing) == tostring(card.face)).is(true)
         end)       
     end)
@@ -90,6 +92,7 @@ Card = class()
 Card.allSuits = {"spades","hearts","diamonds","clubs"}
 
 function Card:init(rank, suit)
+    print("making card")
     --card dimensions are 64mm/89mm
     self.rank = rank or 1
     self.suit = suit or "spades"
@@ -108,7 +111,7 @@ function Card:init(rank, suit)
     self.body.shortName = self:shortName()
     self.back = asset.cardBackMonkey
     self.face = asset[self:shortName()..".png"]
-    self.showing = self.back
+    self.showing = self.back,mk
     self.lastTouch = {}
 end
 

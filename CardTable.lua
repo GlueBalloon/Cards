@@ -56,13 +56,12 @@ function CardTable:init()
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    self.cards = CardTable.makeDeck()
+    local deck = CardTable.makeDeck()
    -- self.stacks = {CardStack()}
-    for i, card in ipairs(self.cards) do
+    for i, card in ipairs(deck) do
         debugDraw:addBody(card.body)
-        self.cardsWithBodiesAsKeys[card.body] = card
-    end
-    
+        self:addCard(card)
+    end    
     --[[
     for k,v in pairs (self.cardsWithBodiesAsKeys) do
         print(k.shortName)
@@ -86,6 +85,17 @@ function CardTable:init()
         print("cardTable keys, names:\n"..cardsString)
     end)
     -- self:moveFreeCardsToStack(self.cards, self.stacks[1])
+end
+
+function CardTable:addCard(card)
+ --   print("adding card ", card, card.body.shortName)
+    table.insert(self.cards, card)
+    self.cardsWithBodiesAsKeys[card.body] = card
+end
+
+function CardTable:removeCard(card)
+    remove(self.cards, card)
+    self.cardsWithBodiesAsKeys[card.body] = nil
 end
 
 function CardTable:setup()
@@ -161,42 +171,76 @@ function CardTable:draw()
 end
 
 
-function CardTable:touched(touch, bodies)
-    --print("table got a touch")
-    if true then
-        if bodies then
-            local swapDeck = {}
-            for i, body in ipairs(bodies) do
-                if body.owningClass == "card" then
-                    swapDeck[#swapDeck + 1] = self.cardsWithBodiesAsKeys[body]
+function CardTable:touched(touch, bodies, firstBodyTouched)
+    local indexOfFirstTouched
+--    print("table got a touch")
+    --make sure self.cards is in same order as bodies array
+    if bodies then
+        local swapDeck = {}
+        for i, body in ipairs(bodies) do
+            if body.owningClass == "card" then
+                if firstBodyTouched == body then
+                    indexOfFirstTouched = #swapDeck + 1
+                    --[[
+                    print("indexOfFirstTouched found: "..tostring(indexOfFirstTouched))
+                    print("cardToForeground: "..body.shortName)
+                    ]]
                 end
+                swapDeck[#swapDeck + 1] = self.cardsWithBodiesAsKeys[body]
+                --[[
+                if indexOfFirstTouched then
+                    for k,v in pairs(self.cards) do
+                        print(indexOfFirstTouched)
+                        print(k,self.cards[indexOfFirstTouched].body.shortName)
+                    end
+                    print("swapDeck card "..tostring(indexOfFirstTouched).." is "..self.cards[indexOfFirstTouched].body.shortName)
+                end
+                ]]
             end
-            if #swapDeck > 0 then
-                self.cards = swapDeck
-            end
-            --return
+        end
+        print("swapdeck count:"..tostring(#swapDeck))
+        if #swapDeck > 0 then
+            self.cards = swapDeck
         end
     end
-    --print("reordered deck")
-    local indexOfFirstTouched
-    local touchPoint = vec2(touch.pos.x, touch.pos.y)
+    
+   -- print("made deck order match bodies")
+    --[[
+    if indexOfFirstTouched then
+        for k,v in pairs(self.cards) do
+            print(k,self.cards[k].body.shortName)
+        end
+        print("cardToForeground: "..self.cards[indexOfFirstTouched].body.shortName)
+    end
+    ]]
+    --    local touchPoint = vec2(touch.pos.x, touch.pos.y)
     --count backwards through the cards so we find the frontmost card touched
+    --[[
     for i=#self.cards, 1, -1 do
+        -- print(self.cards[i].body.shortName)
         if self.cards[i].body:testPoint(touchPoint) then
             indexOfFirstTouched = i
+            print("indexOfFirstTouched found: "..tostring(indexOfFirstTouched))
             break
         end
     end
+    ]]
+    --   print("searched for first touched")
+    --   print("indexOfFirstTouched is nil: "..tostring(indexOfFirstTouched == nil))
     if indexOfFirstTouched then
         local cardToForeground = self.cards[indexOfFirstTouched]
+  --      print("cardToForeground: "..cardToForeground.body.shortName)
         --at the start of a touch move the card to the top of the stack
+        --[[
         if touch.state == BEGAN then
             table.remove(self.cards, indexOfFirstTouched)
             table.insert(self.cards, cardToForeground)
         end
-        print("sending touch to card")
+        ]]
+        print("sending touch to card: "..cardToForeground.body.shortName)
         cardToForeground:touched(touch)
     end
+    
     --[[
     for i,stack in ipairs(self.stacks) do
         stack:touched(touch)
