@@ -67,7 +67,7 @@ function testCard()
             _:expect("--b: card retains last touch", retained).is(true)
         end)
 
-        _:test("debugDraw sends touch to card", function()
+        _:test("debugDraw sends BEGAN touch to card", function()
             card.body.x = WIDTH * 0.95
             card.body.y = HEIGHT * 0.95
             fakedTouch.pos.x = card.body.x +1
@@ -76,11 +76,22 @@ function testCard()
             local gotFromDebug = fakedTouch == card.lastTouch
             _:expect(gotFromDebug).is(true)
         end)
+        
+        _:test("debugDraw sends ENDED touch to card", function()
+            card.body.x = WIDTH * 0.95
+            card.body.y = HEIGHT * 0.95
+            fakedTouch = fakeTouch(card.body.x +1, card.body.y +1, ENDED, 1)
+            debugDraw:addTouchToTouchMap(fakedTouch, card.body) --needed because this touchId won't be in touchmap because there was no beginning of it
+            debugDraw:touched(fakedTouch)
+            local gotFromDebug = fakedTouch == card.lastTouch
+            _:expect(gotFromDebug).is(true)
+        end)
     
         _:test("tap ending on card flips it over", function()
             card.showing = card.back
+            print(card.showing)
             fakedTouch = fakeTouch(card.body.x +1, card.body.y +1, ENDED, 1)
-            --debugDraw:addTouchToTouchMap(fakedTouch, card.body)
+            debugDraw:addTouchToTouchMap(fakedTouch, card.body)
             debugDraw:touched(fakedTouch)
             --print(card.showing, card.face)
             _:expect(tostring(card.showing) == tostring(card.face)).is(true)
@@ -92,7 +103,7 @@ Card = class()
 Card.allSuits = {"spades","hearts","diamonds","clubs"}
 
 function Card:init(rank, suit)
-    print("making card")
+    --print("making card")
     --card dimensions are 64mm/89mm
     self.rank = rank or 1
     self.suit = suit or "spades"

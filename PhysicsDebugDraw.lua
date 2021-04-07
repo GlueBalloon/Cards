@@ -446,7 +446,9 @@ function PhysicsDebugDraw:touched(touch)
         --not sure why this works
      --   remove(self.bodies, touchedBody)
     --    table.insert(self.bodies, 1, touchedBody)
-
+        if self.touchMap[touch.id].body:testPoint(touchPoint) then
+            firstBodyTouched = self.touchMap[touch.id].body
+        end
         self.touchMap[touch.id] = nil
         --[[
         for _, body in ipairs(self.bodies) do

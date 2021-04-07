@@ -179,13 +179,15 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
         local swapDeck = {}
         for i, body in ipairs(bodies) do
             if body.owningClass == "card" then
+                --[[
                 if firstBodyTouched == body then
                     indexOfFirstTouched = #swapDeck + 1
+                    ]]
                     --[[
                     print("indexOfFirstTouched found: "..tostring(indexOfFirstTouched))
                     print("cardToForeground: "..body.shortName)
                     ]]
-                end
+               -- end
                 swapDeck[#swapDeck + 1] = self.cardsWithBodiesAsKeys[body]
                 --[[
                 if indexOfFirstTouched then
@@ -198,7 +200,7 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
                 ]]
             end
         end
-        print("swapdeck count:"..tostring(#swapDeck))
+        --print("swapdeck count:"..tostring(#swapDeck))
         if #swapDeck > 0 then
             self.cards = swapDeck
         end
@@ -227,8 +229,8 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
     ]]
     --   print("searched for first touched")
     --   print("indexOfFirstTouched is nil: "..tostring(indexOfFirstTouched == nil))
-    if indexOfFirstTouched then
-        local cardToForeground = self.cards[indexOfFirstTouched]
+        if firstBodyTouched then
+        --local cardToForeground = self.cards[indexOfFirstTouched]
   --      print("cardToForeground: "..cardToForeground.body.shortName)
         --at the start of a touch move the card to the top of the stack
         --[[
@@ -237,8 +239,9 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
             table.insert(self.cards, cardToForeground)
         end
         ]]
-        print("sending touch to card: "..cardToForeground.body.shortName)
-        cardToForeground:touched(touch)
+            local cardTouched = self.cardsWithBodiesAsKeys[firstBodyTouched]
+            print("sending touch to card: "..firstBodyTouched.shortName)
+            cardTouched:touched(touch)
     end
     
     --[[
