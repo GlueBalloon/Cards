@@ -12,13 +12,17 @@ function testPhysicsDebug()
         _:before(function()
             card = Card(3, "hearts")
             card2 = Card(7, "clubs")
-            debugDraw:addBody(card2.body)
+            card3 = Card(13, "hearts")
             debugDraw:addBody(card.body)
+            debugDraw:addBody(card2.body)
+            debugDraw:addBody(card3.body)
             cardTable:addCard(card)
             cardTable:addCard(card2)
+            cardTable:addCard(card3)
             fakeBeginTouch = fakeTouch(100, 800, BEGAN, 1, 4373)
             fakeMovingTouch = fakeTouch(200, 700, MOVING, 1, 4373, fakeBeginTouch.pos)
-            fakeEndTouch = fakeTouch(300, 600, ENDED, 1, 4373, fakeMovingTouch.pos)
+            fakeFurtherMovingTouch = fakeTouch(300, 500, MOVING, 1, 4373, fakeBeginTouch.pos)
+            fakeEndTouch = fakeTouch(500, 100, ENDED, 1, 4373, fakeMovingTouch.pos)
         end)
         
         _:after(function()
@@ -26,11 +30,14 @@ function testPhysicsDebug()
             desiredString = ""
             remove(debugDraw.bodies, card.body)
             remove(debugDraw.bodies, card2.body)
+            remove(debugDraw.bodies, card3.body)
             cardTable:removeCard(card)
             cardTable:removeCard(card2)
+            cardTable:removeCard(card3)
             card.body:destroy()
             card2.body:destroy()
-            card, card2 = nil, nil
+            card3.body:destroy()
+            card, card2, card3 = nil, nil, nil
             debugDraw.touchMap[fakeBeginTouch.id] = nil
         end)
         
@@ -120,8 +127,8 @@ function testPhysicsDebug()
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
             debugDraw:touched(fakeBeginTouch)
             debugDraw:touched(fakeMovingTouch)
-            _:expect("one follower if touch started outside card2 then went in", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
-            _:expect("card2 is the follower", debugDraw.touchMap[fakeBeginTouch.id].followers).has(card2.body)
+            _:expect("--a: one follower if touch started outside card2 then went in", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
+            _:expect("--b: card2 is the follower", debugDraw.touchMap[fakeBeginTouch.id].followers).has(card2.body)
         end)
         
         _:test("touch table is cleared from touchMap when touch ends", function()
@@ -146,18 +153,26 @@ function testPhysicsDebug()
             fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
             fakeEndTouch.state = CANCELLED
             debugDraw:touched(fakeBeginTouch)
-            _:expect("touchMap after BEGAN has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
-            _:expect("touchMap after BEGAN has no followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
+            _:expect("--a: touchMap after BEGAN has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
+            _:expect("--b: touchMap after BEGAN has no followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
             debugDraw:touched(fakeMovingTouch)
-            _:expect("touchMap still right body after MOVING", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
-            _:expect("after MOVING has one follower", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
+            _:expect("--c: touchMap still right body after MOVING", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
+            _:expect("--d: after MOVING has one follower", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
             debugDraw:touched(fakeEndTouch)
             local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
-            _:expect("after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
+            _:expect("--e: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
         end)
         
-        _:test("cardsInStacks detects cards with centers near same point", function()
-            --must make arrays of stacks and then check centers of their cards against them
+        _:test("touchmap with one or more followers creates a stack", function()
+            card.body.x, card.body.y = 1500, 1500
+            card2.body.x, card2.body.y = 20, 20
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            debugDraw:touched(fakeBeginTouch)
+            debugDraw:touched(fakeMovingTouch)
+--change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
+          --  a touch map counts stacked cards and creates a badge
+            -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
         end)
     end)
 end
