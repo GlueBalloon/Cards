@@ -164,12 +164,19 @@ function testPhysicsDebug()
         end)
         
         _:test("touchmap with one or more followers creates a stack", function()
+            local cardDistanceMin = card.height * 1.1
             card.body.x, card.body.y = 1500, 1500
-            card2.body.x, card2.body.y = 20, 20
+            card2.body.x, card2.body.y = card.body.x - cardDistanceMin, card.body.y - cardDistanceMin
+            card3.body.x, card3.body.y = card2.body.x - cardDistanceMin, card2.body.y - cardDistanceMin
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            fakeFurtherMovingTouch.x, fakeFurtherMovingTouch.y = card3.body.x, card3.body.y
+            local rightCount = #debugDraw.stacks + 1
             debugDraw:touched(fakeBeginTouch)
             debugDraw:touched(fakeMovingTouch)
+            _:expect("--a: after touch moves through two bodies, stack is made", rightCount).is(#debugDraw.stacks)
+            debugDraw:touched(fakeFurtherMovingTouch)
+         --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
           --  a touch map counts stacked cards and creates a badge
             -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
