@@ -42,11 +42,11 @@ function testPhysicsDebug()
         end)
         
         function setupTwoCardsAndBeginTouch()
-            --cards are stacked bt default
+            --cards are stacked by default, so card2 is touched first
             card.body.x, card.body.y = WIDTH, HEIGHT
             card2.body.x, card2.body.y = card.body.x, card.body.y
             --touch starts right on 'em
-            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.05), card.body.y+(card.height*0.05)
             debugDraw:touched(fakeBeginTouch)
         end
         
@@ -76,15 +76,12 @@ function testPhysicsDebug()
             _:expect(rightTotal).is(true)
         end)
         
-        _:test("card that tap ended on moves to end of bodies table", function()
+        _:test("card that tap started on moves to end of bodies table", function()
             --give 'card' a new position
             card.body.x, card.body.y = WIDTH, HEIGHT
-            --make a fake touch maker
-            fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x +1, card.body.y +2
-            debugDraw:addTouchToTouchMap(fakeEndTouch, card.body)
-            --debugDraw:listCards()
-            debugDraw:touched(fakeEndTouch)
-            --debugDraw:listCards()
+            --position fake touch
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x +1, card.body.y +2
+            debugDraw:touched(fakeBeginTouch)
             local lastBody = debugDraw.bodies[#debugDraw.bodies]
             _:expect(lastBody == card.body).is(true)
         end)
@@ -99,7 +96,7 @@ function testPhysicsDebug()
             debugDraw:touched(fakeBeginTouch)
             ]]
             setupTwoCardsAndBeginTouch()
-            _:expect("touchMap has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
+            _:expect("touchMap has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card2.body)
             _:expect("right number of followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
         end)
         
@@ -171,10 +168,12 @@ function testPhysicsDebug()
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
             fakeFurtherMovingTouch.x, fakeFurtherMovingTouch.y = card3.body.x, card3.body.y
-            local rightCount = #debugDraw.stacks + 1
+            local rightCount = #debugDraw.stacks
             debugDraw:touched(fakeBeginTouch)
+            _:expect("--a: after touch moves through one body, no stack is made", #debugDraw.stacks).is(rightCount)
             debugDraw:touched(fakeMovingTouch)
-            _:expect("--a: after touch moves through two bodies, stack is made", rightCount).is(#debugDraw.stacks)
+            rightCount = rightCount + 1
+            _:expect("--b: after touch moves through two bodies, stack is made", #debugDraw.stacks).is(rightCount)
             debugDraw:touched(fakeFurtherMovingTouch)
          --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
@@ -192,6 +191,7 @@ function PhysicsDebugDraw:init()
     self.joints = {}
     self.touchMap = {}
     self.contacts = {}
+    self.stacks = {}
     parameter.action("List DebugDraw bodies", function()
         local cardsString = ""
         for key, body in pairs(self.bodies) do

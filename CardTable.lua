@@ -240,7 +240,7 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
         end
         ]]
             local cardTouched = self.cardsWithBodiesAsKeys[firstBodyTouched]
-            print("sending touch to card: "..firstBodyTouched.shortName)
+           -- print("sending touch to card: "..firstBodyTouched.shortName)
             cardTouched:touched(touch)
     end
     

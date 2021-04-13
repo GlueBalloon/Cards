@@ -1,6 +1,6 @@
 function testCard()
     
-    CodeaUnit.detailed = true
+    CodeaUnit.detailed = false
     CodeaUnit.skip = false
     
     _:describe("Testing Card", function()
@@ -89,7 +89,7 @@ function testCard()
     
         _:test("tap ending on card flips it over", function()
             card.showing = card.back
-            print(card.showing)
+           -- print(card.showing)
             fakedTouch = fakeTouch(card.body.x +1, card.body.y +1, ENDED, 1)
             debugDraw:addTouchToTouchMap(fakedTouch, card.body)
             debugDraw:touched(fakedTouch)
