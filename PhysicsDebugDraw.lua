@@ -457,6 +457,16 @@ function PhysicsDebugDraw:touched(touch)
                     end
                     --add this body to the followers
                     table.insert(self.touchMap[touch.id].followers, body)
+                    local stackToUse
+                    for i, stack in ipairs(self.stacks) do
+                        if stack[1] == self.touchMap[touch.id].body then
+                            stackToUse = stack
+                            break
+                        end
+                    end
+                    if not stackToUse then
+                        self.stacks[#self.stacks + 1] = {}
+                    end
                 end
             end
         end
