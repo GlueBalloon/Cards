@@ -1,7 +1,7 @@
 
 function testPhysicsDebug()
     
-    CodeaUnit.detailed = false
+    CodeaUnit.detailed = true
     CodeaUnit.skip = false
     
     -- local shouldWipeDebugDraw = false
@@ -21,8 +21,8 @@ function testPhysicsDebug()
             cardTable:addCard(card3)
             fakeBeginTouch = fakeTouch(100, 800, BEGAN, 1, 4373)
             fakeMovingTouch = fakeTouch(200, 700, MOVING, 1, 4373, fakeBeginTouch.pos)
-            fakeFurtherMovingTouch = fakeTouch(300, 500, MOVING, 1, 4373, fakeBeginTouch.pos)
-            fakeEndTouch = fakeTouch(500, 100, ENDED, 1, 4373, fakeMovingTouch.pos)
+            fakeFurtherMovingTouch = fakeTouch(300, 500, MOVING, 1, 4373, fakeMovingTouch.pos)
+            fakeEndTouch = fakeTouch(500, 100, ENDED, 1, 4373, fakeFurtherMovingTouch.pos)
         end)
         
         _:after(function()
@@ -167,14 +167,26 @@ function testPhysicsDebug()
             card3.body.x, card3.body.y = card2.body.x - cardDistanceMin, card2.body.y - cardDistanceMin
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-            fakeFurtherMovingTouch.x, fakeFurtherMovingTouch.y = card3.body.x, card3.body.y
+            fakeTouchRightNextToFirstMovingTouch = fakeTouch(card2.body.x + 1, card2.body.y, MOVING, 1, 4373, fakeMovingTouch.pos)
+            --redefine further touch to include tiny movement above
+            fakeFurtherMovingTouch = fakeTouch(card3.body.x, card3.body.y, MOVING, 1, 4373, fakeTouchRightNextToFirstMovingTouch.pos)
             local rightCount = #debugDraw.stacks
             debugDraw:touched(fakeBeginTouch)
             _:expect("--a: after touch moves through one body, no stack is made", #debugDraw.stacks).is(rightCount)
             debugDraw:touched(fakeMovingTouch)
             rightCount = rightCount + 1
             _:expect("--b: after touch moves through two bodies, stack is made", #debugDraw.stacks).is(rightCount)
-            debugDraw:touched(fakeFurtherMovingTouch)
+            local stackWithRightBody
+            for i, stack in ipairs(debugDraw.stacks) do
+                if stack[1] == card.body then
+                    stackWithRightBody = stack
+                    break
+                end
+            end
+            _:expect("--c: stack exists with right first body", stackWithRightBody ~= nil).is(true)
+            _:expect("--d: same stack contains second body", stackWithRightBody).has(card2.body)
+            debugDraw:touched(fakeTouchRightNextToFirstMovingTouch)
+            _:expect("--e: card touched twice is not added twice", #stackWithRightBody).is(2)
          --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
           --  a touch map counts stacked cards and creates a badge
@@ -457,15 +469,20 @@ function PhysicsDebugDraw:touched(touch)
                     end
                     --add this body to the followers
                     table.insert(self.touchMap[touch.id].followers, body)
-                    local stackToUse
+                    --figure out the stack situation
+                    local stackExists = false
+                    --look for a stack whose first body is the main body of this touchMap
                     for i, stack in ipairs(self.stacks) do
+                        --if it's found, add this body to it
                         if stack[1] == self.touchMap[touch.id].body then
-                            stackToUse = stack
+                            table.insert(stack, body)
+                            stackExists = true
                             break
                         end
                     end
-                    if not stackToUse then
-                        self.stacks[#self.stacks + 1] = {}
+                    --if not, make a new stack and populate it
+                    if not stackExists then
+                        self.stacks[#self.stacks + 1] = {self.touchMap[touch.id].body, body}
                     end
                 end
             end

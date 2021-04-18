@@ -112,6 +112,9 @@ function CodeaUnit:expect(...)
                 found = true
             end
         end
+        if not found then
+            conditional = "no such value"
+        end
         notify(found)
     end
     
