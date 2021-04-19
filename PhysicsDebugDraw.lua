@@ -170,12 +170,12 @@ function testPhysicsDebug()
             fakeTouchRightNextToFirstMovingTouch = fakeTouch(card2.body.x + 1, card2.body.y, MOVING, 1, 4373, fakeMovingTouch.pos)
             --redefine further touch to include tiny movement above
             fakeFurtherMovingTouch = fakeTouch(card3.body.x, card3.body.y, MOVING, 1, 4373, fakeTouchRightNextToFirstMovingTouch.pos)
-            local rightCount = #debugDraw.stacks
+            local rightNumStacks = #debugDraw.stacks
             debugDraw:touched(fakeBeginTouch)
-            _:expect("--a: after touch moves through one body, no stack is made", #debugDraw.stacks).is(rightCount)
+            _:expect("--a: after touch moves through one body, no stack is made", #debugDraw.stacks).is(rightNumStacks)
             debugDraw:touched(fakeMovingTouch)
-            rightCount = rightCount + 1
-            _:expect("--b: after touch moves through two bodies, stack is made", #debugDraw.stacks).is(rightCount)
+            rightNumStacks = rightNumStacks + 1
+            _:expect("--b: after touch moves through two bodies, stack is made", #debugDraw.stacks).is(rightNumStacks)
             local stackWithRightBody
             for i, stack in ipairs(debugDraw.stacks) do
                 if stack[1] == card.body then
@@ -186,7 +186,11 @@ function testPhysicsDebug()
             _:expect("--c: stack exists with right first body", stackWithRightBody ~= nil).is(true)
             _:expect("--d: same stack contains second body", stackWithRightBody).has(card2.body)
             debugDraw:touched(fakeTouchRightNextToFirstMovingTouch)
-            _:expect("--e: card touched twice is not added twice", #stackWithRightBody).is(2)
+            _:expect("--e: card touched twice is not added twice", 2).is(#stackWithRightBody)
+            debugDraw:touched(fakeFurtherMovingTouch)
+            _:expect("--f: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
+            _:expect("--g: third card touched is also added", stackWithRightBody).has(card3.body)
+            
          --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
           --  a touch map counts stacked cards and creates a badge
