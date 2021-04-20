@@ -190,7 +190,8 @@ function testPhysicsDebug()
             debugDraw:touched(fakeFurtherMovingTouch)
             _:expect("--f: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
             _:expect("--g: third card touched is also added", stackWithRightBody).has(card3.body)
-            
+            local badgeExists = stackWithRightBody.badge ~= nil
+            _:expect("--h: stack has badge", badgeExists).is(true)
          --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
           --  a touch map counts stacked cards and creates a badge
