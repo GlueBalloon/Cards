@@ -487,7 +487,9 @@ function PhysicsDebugDraw:touched(touch)
                     end
                     --if not, make a new stack and populate it
                     if not stackExists then
-                        self.stacks[#self.stacks + 1] = {self.touchMap[touch.id].body, body}
+                        local newStack = {self.touchMap[touch.id].body, body}
+                                                                                                                                                                                                                                                                                            newStack.badge = createCircle(500,500,90)
+                        self.stacks[#self.stacks + 1] = newStack
                     end
                 end
             end
