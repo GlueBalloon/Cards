@@ -115,7 +115,7 @@ function Card:init(rank, suit)
     self.body.linearDamping = 4 --has something to do with momentum
     self.body.angularDamping = 5
     self.body.categories={2}
-    self.body.mask={0}
+    self.body.mask={1} --setting to zero becomes 1 for some reason
    -- self.body.info = {["kind"] = self:shortName(), ["ownerClass"] = self.class} <--don't need this, can store anything directly on body table, refactor code to remove references to this
     --debugDraw:addBody(self.body)
     self.body.owningClass = "card"

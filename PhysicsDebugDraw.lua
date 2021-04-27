@@ -193,7 +193,7 @@ function testPhysicsDebug()
             local badgeExists = stackWithRightBody.badge ~= nil
             _:expect("--h: stack has badge", badgeExists).is(true)
             _:expect("--i: badge has right collision category", stackWithRightBody.badge.categories).has(2)
-            _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(0)
+            _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(1)
          --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
 --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
           --  a touch map counts stacked cards and creates a badge
@@ -492,6 +492,8 @@ function PhysicsDebugDraw:touched(touch)
                         local newStack = {self.touchMap[touch.id].body, body}
                         local badgeSize = cardTable.cardsWithBodiesAsKeys[body].width * 0.135
                         newStack.badge = createCircle(500,500,badgeSize)
+                        newStack.badge.categories = {2}
+                        newStack.badge.mask = {1}
                         self.stacks[#self.stacks + 1] = newStack
                     end
                 end
