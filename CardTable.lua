@@ -229,19 +229,21 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
     ]]
     --   print("searched for first touched")
     --   print("indexOfFirstTouched is nil: "..tostring(indexOfFirstTouched == nil))
-        if firstBodyTouched then
-        --local cardToForeground = self.cards[indexOfFirstTouched]
-  --      print("cardToForeground: "..cardToForeground.body.shortName)
-        --at the start of a touch move the card to the top of the stack
-        --[[
-        if touch.state == BEGAN then
+    if firstBodyTouched and firstBodyTouched.owningClass then
+        if firstBodyTouched.owningClass == "card" then
+            --local cardToForeground = self.cards[indexOfFirstTouched]
+            --      print("cardToForeground: "..cardToForeground.body.shortName)
+            --at the start of a touch move the card to the top of the stack
+            --[[
+            if touch.state == BEGAN then
             table.remove(self.cards, indexOfFirstTouched)
             table.insert(self.cards, cardToForeground)
-        end
-        ]]
+            end
+            ]]
             local cardTouched = self.cardsWithBodiesAsKeys[firstBodyTouched]
-           -- print("sending touch to card: "..firstBodyTouched.shortName)
+            -- print("sending touch to card: "..firstBodyTouched.shortName)
             cardTouched:touched(touch)
+        end
     end
     
     --[[
