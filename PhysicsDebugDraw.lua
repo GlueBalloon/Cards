@@ -102,11 +102,11 @@ function testPhysicsDebug()
         
         
         _:test("a card doesn't become a follower if the touch started inside its bounds", function()
-        setupTwoCardsAndBeginTouch()
-        fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-        debugDraw:touched(fakeMovingTouch)
-        _:expect(#debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
-    end)
+            setupTwoCardsAndBeginTouch()
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            debugDraw:touched(fakeMovingTouch)
+            _:expect(#debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
+        end)
         
         
         _:test("a card doesn't become a follower if the previous touch was inside its bounds", function()
@@ -194,11 +194,15 @@ function testPhysicsDebug()
             _:expect("--h: stack has badge", badgeExists).is(true)
             _:expect("--i: badge has right collision category", stackWithRightBody.badge.categories).has(2)
             _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(1)
-         --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
---change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
-          --  a touch map counts stacked cards and creates a badge
+            --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
+            --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
+            --  a touch map counts stacked cards and creates a badge
             -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
         end)
+        
+        _:test("reference to badge object created in card table", function()
+            
+        end)       
     end)
 end
 
@@ -223,7 +227,7 @@ end
 
 function PhysicsDebugDraw:addBody(body)
     -- print("adding"..body.shortName)
-       self.bodies[#self.bodies+1] = body
+    self.bodies[#self.bodies+1] = body
     --table.insert(self.bodies, body)
 end
 
@@ -268,7 +272,7 @@ function PhysicsDebugDraw:hasBody(verifyMe)
         --[[
         if verifyMe.info and verifyMe.info.ownerClass and verifyMe.info.ownerClass == "card" then
         print("PhysicsDebugDraw:hasBody: found card: "..verifyMe.info.kind)
-    end
+        end
         ]]
         return true, verifyMe
     else
@@ -363,7 +367,7 @@ function PhysicsDebugDraw:draw()
         
         
         for i,body in ipairs(self.bodies) do
-         pushMatrix()
+            pushMatrix()
             
             
             --[[
@@ -435,16 +439,16 @@ function PhysicsDebugDraw:touched(touch)
     --print("PDD set touchPoint")
     --when a touch starts on a dynamic body, log it in touchMap
     if touch.state == BEGAN then
-    --    print("PDD detected beginning touch")
+        --    print("PDD detected beginning touch")
         --[[
         for i,body in ipairs(self.bodies) do
         if body.type == DYNAMIC and body:testPoint(touchPoint) then
         self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
         returnValue = true
-    end
-    end
+        end
+        end
         ]]
-      --  for _,body in ipairs(self.bodies) do
+        --  for _,body in ipairs(self.bodies) do
         for i=#self.bodies, 1, -1 do
             local body = self.bodies[i]
             if body.type == DYNAMIC and body:testPoint(touchPoint) then
@@ -503,17 +507,17 @@ function PhysicsDebugDraw:touched(touch)
         --delete any touchMap for an end touch
     elseif touch.state == ENDED and self.touchMap[touch.id] then
         --move card from this touchMap to end of bodies table
-   --     local touchedBody = self.touchMap[touch.id].body
+        --     local touchedBody = self.touchMap[touch.id].body
         --not sure why this works
-     --   remove(self.bodies, touchedBody)
-    --    table.insert(self.bodies, 1, touchedBody)
+        --   remove(self.bodies, touchedBody)
+        --    table.insert(self.bodies, 1, touchedBody)
         if self.touchMap[touch.id].body:testPoint(touchPoint) then
             firstBodyTouched = self.touchMap[touch.id].body
         end
         self.touchMap[touch.id] = nil
         --[[
         for _, body in ipairs(self.bodies) do
-            body[math.floor(touch.id)] = nil --touch.id used as numeric key to indicate following
+        body[math.floor(touch.id)] = nil --touch.id used as numeric key to indicate following
         end
         ]]
         returnValue = true
@@ -529,14 +533,14 @@ function PhysicsDebugDraw:touched(touch)
         --       if body[flooredId] then
         --          body[flooredId] = nil
         --     end
-    end
-    end
+        end
+        end
         ]]
         self.touchMap = {}
     end
     
     if(returnValue == true) then
-      --  print("sent touch to card table from debugDraw")
+        --  print("sent touch to card table from debugDraw")
         cardTable:touched(touch, self.bodies, firstBodyTouched)
     end
     --print("PDD about to return value")
