@@ -160,7 +160,7 @@ function testPhysicsDebug()
             _:expect("--e: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
         end)
         
-        _:test("touchmap with one or more followers creates a stack with badge", function()
+        _:test("badge creation", function()
             local cardDistanceMin = card.height * 1.1
             card.body.x, card.body.y = 1500, 1500
             card2.body.x, card2.body.y = card.body.x - cardDistanceMin, card.body.y - cardDistanceMin
@@ -194,15 +194,12 @@ function testPhysicsDebug()
             _:expect("--h: stack has badge", badgeExists).is(true)
             _:expect("--i: badge has right collision category", stackWithRightBody.badge.categories).has(2)
             _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(1)
+            _:expect("--k: reference to badge object created in card table")--something is something)
             --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
             --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
             --  a touch map counts stacked cards and creates a badge
             -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
         end)
-        
-        _:test("reference to badge object created in card table", function()
-            
-        end)       
     end)
 end
 
