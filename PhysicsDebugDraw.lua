@@ -194,7 +194,7 @@ function testPhysicsDebug()
             _:expect("--h: stack has badge", badgeExists).is(true)
             _:expect("--i: badge has right collision category", stackWithRightBody.badge.categories).has(2)
             _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(1)
-            _:expect("--k: reference to badge object created in card table")--something is something)
+            _:expect("--k: reference to badge object created in card table", cardTable.badges).has(stackWithRightBody.badge)
             --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
             --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
             --  a touch map counts stacked cards and creates a badge
