@@ -56,6 +56,7 @@ function CardTable:init()
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
+    self.badges = {}
     local deck = CardTable.makeDeck()
    -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
