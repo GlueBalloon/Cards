@@ -164,11 +164,13 @@ function CardTable:draw()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-    --[[
-    for i,stack in ipairs(self.stacks) do
-        stack:draw()
+
+    for i,badge in ipairs(self.badges) do
+        pushStyle()
+        fill(255, 14, 0)
+        ellipse(badge.x, badge.y, badge.radius*2)
+        popStyle()
     end
-      ]]
 end
 
 
