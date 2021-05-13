@@ -169,6 +169,10 @@ function CardTable:draw()
         pushStyle()
         fill(255, 14, 0)
         ellipse(badge.x, badge.y, badge.radius*2)
+        fill(255)
+        font("HelveticaNeue-Bold")
+        fontSize(badge.radius*1.15)
+        text(badge.count, badge.x, badge.y)
         popStyle()
     end
 end

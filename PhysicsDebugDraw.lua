@@ -495,6 +495,7 @@ function PhysicsDebugDraw:touched(touch)
                         newStack.badge = createCircle(500,500,badgeSize)
                         newStack.badge.categories = {2}
                         newStack.badge.mask = {1}
+                        newStack.badge.count = 2
                         self.stacks[#self.stacks + 1] = newStack
                         table.insert(cardTable.badges, newStack.badge)
                     end
