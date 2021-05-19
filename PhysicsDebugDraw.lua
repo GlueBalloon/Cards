@@ -497,7 +497,7 @@ function PhysicsDebugDraw:touched(touch)
                         newStack.badge.mask = {1}
                         newStack.badge.count = 2
                         self.stacks[#self.stacks + 1] = newStack
-                        table.insert(cardTable.badges, newStack.badge)
+                        table.insert(cardTable.stacks, newStack)
                     end
                 end
             end

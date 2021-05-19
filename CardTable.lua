@@ -56,7 +56,7 @@ function CardTable:init()
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    self.badges = {}
+    self.stacks = {}
     local deck = CardTable.makeDeck()
    -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
@@ -164,16 +164,20 @@ function CardTable:draw()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-
-    for i,badge in ipairs(self.badges) do
-        pushStyle()
-        fill(255, 14, 0)
-        ellipse(badge.x, badge.y, badge.radius*2)
-        fill(255)
-        font("HelveticaNeue-Bold")
-        fontSize(badge.radius*1.15)
-        text(badge.count, badge.x, badge.y)
-        popStyle()
+    if self.cards[1] then
+        local cardW, cardH = self.cards[1].width, self.cards[1].height
+        for i,stack in ipairs(self.stacks) do
+            local badge, pos = stack.badge, stack[1].position
+            pos = pos - vec2(cardW * 0.5, cardH * 0.5)
+            pushStyle()
+            fill(255, 14, 0)
+            ellipse(pos.x, pos.y, badge.radius*2)
+            fill(255)
+            font("HelveticaNeue-Bold")
+            fontSize(badge.radius*1.15)
+            text(badge.count, pos.x, pos.y)
+            popStyle()
+        end
     end
 end
 
