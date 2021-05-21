@@ -167,15 +167,16 @@ function CardTable:draw()
     if self.cards[1] then
         local cardW, cardH = self.cards[1].width, self.cards[1].height
         for i,stack in ipairs(self.stacks) do
-            local badge, pos = stack.badge, stack[1].position
+           -- local badge, pos = stack.badge, stack[1].position
+            local pos = stack[1].position
             pos = pos - vec2(cardW * 0.5, cardH * 0.5)
             pushStyle()
             fill(255, 14, 0)
-            ellipse(pos.x, pos.y, badge.radius*2)
+            ellipse(pos.x, pos.y, cardW * 0.2)
             fill(255)
             font("HelveticaNeue-Bold")
-            fontSize(badge.radius*1.15)
-            text(badge.count, pos.x, pos.y)
+            fontSize(cardW*0.13)
+            text(#stack, pos.x, pos.y)
             popStyle()
         end
     end

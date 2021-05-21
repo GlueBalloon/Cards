@@ -491,11 +491,13 @@ function PhysicsDebugDraw:touched(touch)
                     --if not, make a new stack and populate it
                     if not stackExists then
                         local newStack = {self.touchMap[touch.id].body, body}
+--[[
                         local badgeSize = cardTable.cardsWithBodiesAsKeys[body].width * 0.09
                         newStack.badge = createCircle(500,500,badgeSize)
                         newStack.badge.categories = {2}
                         newStack.badge.mask = {1}
                         newStack.badge.count = 2
+]]
                         self.stacks[#self.stacks + 1] = newStack
                         table.insert(cardTable.stacks, newStack)
                     end
