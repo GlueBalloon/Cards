@@ -51,12 +51,12 @@ CardTable.tableContainsCard = function (targetTable, card)
     else return false end
 end
 
-function CardTable:init()
+function CardTable:init(physicsDraw)
     physics.gravity(0,0)
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    self.stacks = {}
+    self.stacks = physicsDraw.stacks
     local deck = CardTable.makeDeck()
    -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
@@ -164,10 +164,15 @@ function CardTable:draw()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-    if self.cards[1] then
+    if #self.stacks > 0 then
         local cardW, cardH = self.cards[1].width, self.cards[1].height
+        -- if true then return end
         for i,stack in ipairs(self.stacks) do
-           -- local badge, pos = stack.badge, stack[1].position
+            --[[
+            for i, body in ipairs(stack) do
+                print("cardTable", body.shortName,body.x,body.owningClass)
+                end
+            ]]
             local pos = stack[1].position
             pos = pos - vec2(cardW * 0.5, cardH * 0.5)
             pushStyle()

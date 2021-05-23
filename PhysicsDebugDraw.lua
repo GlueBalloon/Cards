@@ -86,8 +86,6 @@ function testPhysicsDebug()
             _:expect(lastBody == card.body).is(true)
         end)
         
-        
-        
         _:test("only top card in a stack responds to a BEGIN touch", function()
             --[[
             card.body.x, card.body.y = WIDTH, HEIGHT
@@ -163,6 +161,7 @@ function testPhysicsDebug()
         _:test("badge creation", function()
             local cardDistanceMin = card.height * 1.1
             card.body.x, card.body.y = 1500, 1500
+            print(card.body.x, card.body.y)
             card2.body.x, card2.body.y = card.body.x - cardDistanceMin, card.body.y - cardDistanceMin
             card3.body.x, card3.body.y = card2.body.x - cardDistanceMin, card2.body.y - cardDistanceMin
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
@@ -184,17 +183,23 @@ function testPhysicsDebug()
                 end
             end
             _:expect("--c: stack exists with right first body", stackWithRightBody ~= nil).is(true)
-            _:expect("--d: same stack contains second body", stackWithRightBody).has(card2.body)
+            _:expect("--d: stack is keyed to by first body", debugDraw.stacks[card.body]).is(stackWithRightBody)
+            _:expect("--e: same stack contains second body", stackWithRightBody).has(card2.body)
+            local cardTableHasTable = cardTable.stacks == debugDraw.stacks
+            _:expect("--f: cardTable has same stack table", cardTableHasTable).is(true)
             debugDraw:touched(fakeTouchRightNextToFirstMovingTouch)
-            _:expect("--e: card touched twice is not added twice", 2).is(#stackWithRightBody)
+            _:expect("--g: card touched twice is not added twice", 2).is(#stackWithRightBody)
             debugDraw:touched(fakeFurtherMovingTouch)
-            _:expect("--f: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
-            _:expect("--g: third card touched is also added", stackWithRightBody).has(card3.body)
-            local badgeExists = stackWithRightBody.badge ~= nil
-            _:expect("--h: stack has badge", badgeExists).is(true)
-            _:expect("--i: badge has right collision category", stackWithRightBody.badge.categories).has(2)
-            _:expect("--j: badge has right collision mask", stackWithRightBody.badge.mask).has(1)
-            _:expect("--k: reference to badge object created in card table", cardTable.badges).has(stackWithRightBody.badge)
+            _:expect("--h: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
+            _:expect("--i: third card touched is also added", stackWithRightBody).has(card3.body)
+            local stackIdGone = debugDraw.stacks[card.body] == nil
+            local notInStack = true
+            for _, stack in ipairs(debugDraw.stacks) do
+                if stack[1] == card.body then
+                    notInStack = false
+                end
+            end
+            _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
             --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
             --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
             --  a touch map counts stacked cards and creates a badge
@@ -213,29 +218,29 @@ function PhysicsDebugDraw:init()
     self.contacts = {}
     self.stacks = {}
     parameter.action("List DebugDraw bodies", function()
-        local cardsString = ""
-        for key, body in pairs(self.bodies) do
-            local identifier = body.shortName or body
-            cardsString = cardsString.."["..tostring(key).."]:"..tostring(identifier).."   "
-        end
-        print("debugDraw keys/identifiers: "..cardsString)
+        print("debugDraw keys/identifiers: "..self:bodiesList())
     end)
+    parameter.boolean("screenReport", false)
 end
 
 function PhysicsDebugDraw:addBody(body)
     -- print("adding"..body.shortName)
+    for i, thisBody in ipairs(self.bodies) do
+        if thisBody == body then
+            return
+        end
+    end
     self.bodies[#self.bodies+1] = body
     --table.insert(self.bodies, body)
 end
 
-function PhysicsDebugDraw:listCards()
-    local namesString = ""
-    for i=1, #self.bodies do
-        if self.bodies[i].shortName then
-            namesString = namesString..self.bodies[i].shortName..". "
-        end
+function PhysicsDebugDraw:bodiesList()
+    local cardsString = ""
+    for key, body in pairs(self.bodies) do
+        local identifier = body.shortName or body
+        cardsString = cardsString.."["..tostring(key).."]:"..tostring(identifier).."   "
     end
-    print(namesString)
+    return cardsString
 end
 
 function PhysicsDebugDraw:removeBody(removeMe)
@@ -305,6 +310,47 @@ function PhysicsDebugDraw:clear()
 end
 
 function PhysicsDebugDraw:draw()
+    
+    if screenReport then
+        pushStyle()
+        fontSize(15)
+        --    local str, stacksString = self:bodiesList(), ""
+        local xPos = WIDTH * 0.25
+        textWrapWidth(WIDTH * 0.65)
+        textMode(CORNER)
+        --[[
+        for k, v in pairs(self.stacks) do
+        stacksString = stacksString.."self.stacks["..stringIfBody(k).."] = "
+        if type(v) == "table" then
+        stacksString = stacksString.."{"
+        for kk, vv in pairs(v) do
+        local kkStr = stringIfBody(kk)
+        local vvStr = stringIfBody(vv)
+        stacksString = stacksString.." ["..kkStr.."] = "..vvStr.." "
+        end
+        stacksString = stacksString.."}"
+        else
+        stacksString = stacksString..stringIfBody(v)
+        end
+        stacksString = stacksString.."\n"
+        end
+        ]]
+        str = "debug.bodies: "..dump(self.bodies, "", true)
+        local _, strH = textSize(str)
+        fill(255, 14, 0)
+        text(str, xPos, HEIGHT - strH - 10)
+        
+        fill(0, 243, 255)
+        local touchStr = "touchMap: "..dump(self.touchMap, "\n")
+        local _, touchStrH = textSize(touchStr)
+        text(touchStr, xPos, HEIGHT - strH - 10 - touchStrH - 10)
+        
+        stacksString = "stacks: "..dump(self.stacks, "\n")
+        local _, stkStrH = textSize(stacksString)
+        fill(92, 236, 67)
+        text(stacksString, xPos, HEIGHT - strH - 10 - touchStrH - 10 - stkStrH - 20)
+        
+    end
     
     local shouldDraw = true
     if shouldDraw then
@@ -425,6 +471,7 @@ function PhysicsDebugDraw:draw()
     end
     
     popStyle()
+    
 end
 
 function PhysicsDebugDraw:touched(touch)
@@ -448,58 +495,59 @@ function PhysicsDebugDraw:touched(touch)
         --  for _,body in ipairs(self.bodies) do
         for i=#self.bodies, 1, -1 do
             local body = self.bodies[i]
-            if body.type == DYNAMIC and body:testPoint(touchPoint) then
-                -- self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
-                --i think this is adding the same table forvthe same id key 52 times...
-                self:addTouchToTouchMap(touch, body)
-                table.remove(self.bodies, i)
-                table.insert(self.bodies, body)
-                --maybe not now?
-                returnValue = true
-                firstBodyTouched = body
-                break
+            --print(body.shortName, body.owningClass)
+            if body.owningClass == "card" then 
+                if body.type == DYNAMIC and body:testPoint(touchPoint) then
+                    --  print(body.shortName, body.owningClass)
+                    -- self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
+                    --i think this is adding the same table forvthe same id key 52 times...
+                    self:addTouchToTouchMap(touch, body)
+                    print("touchmap: "..self.touchMap[touch.id].body.shortName)
+                    table.remove(self.bodies, i)
+                    table.insert(self.bodies, body)
+                    --maybe not now?
+                    returnValue = true
+                    firstBodyTouched = body
+                    break
+                end
             end
         end
     elseif touch.state == MOVING and self.touchMap[touch.id] then
+        --  print("moving touchmap: "..self.touchMap[touch.id].body.shortName)
         self.touchMap[touch.id].tp = touchPoint
         if CodeaUnit.isRunning then
             print("touchPoint: "..tostring(touchPoint))
         end
         for _,body in ipairs(self.bodies) do
-            --make sure this touch is actually inside this body and this body isn't a leading body
-            if body.type == DYNAMIC and body:testPoint(touchPoint) and body ~= self.touchMap[touch.id].body then
-                --exclude any subsequent body that the previous touch was *inside*
-                if not body:testPoint(touch.prevPos) then
-                    if CodeaUnit.isRunning then
-                        print ("body: "..tostring(body))
-                        print ("touchPoint: "..tostring(touchPoint))
-                        print ("result: "..tostring(body:testPoint(touchPoint)))
-                    end
-                    --add this body to the followers
-                    table.insert(self.touchMap[touch.id].followers, body)
-                    --figure out the stack situation
-                    local stackExists = false
-                    --look for a stack whose first body is the main body of this touchMap
-                    for i, stack in ipairs(self.stacks) do
-                        --if it's found, add this body to it
-                        if stack[1] == self.touchMap[touch.id].body then
-                            table.insert(stack, body)
-                            stackExists = true
-                            break
+            if body.owningClass == "card" then
+                --print("moving, ",body.shortName, body.owningClass)
+                --make sure this touch is actually inside this body and this body isn't a leading body
+                if body.type == DYNAMIC and body:testPoint(touchPoint) and body ~= self.touchMap[touch.id].body then
+                    --exclude any subsequent body that the previous touch was *inside*
+                    if not body:testPoint(touch.prevPos) then
+                        if CodeaUnit.isRunning then
+                            print ("body: "..tostring(body))
+                            print ("touchPoint: "..tostring(touchPoint))
+                            print ("result: "..tostring(body:testPoint(touchPoint)))
                         end
-                    end
-                    --if not, make a new stack and populate it
-                    if not stackExists then
-                        local newStack = {self.touchMap[touch.id].body, body}
---[[
-                        local badgeSize = cardTable.cardsWithBodiesAsKeys[body].width * 0.09
-                        newStack.badge = createCircle(500,500,badgeSize)
-                        newStack.badge.categories = {2}
-                        newStack.badge.mask = {1}
-                        newStack.badge.count = 2
-]]
-                        self.stacks[#self.stacks + 1] = newStack
-                        table.insert(cardTable.stacks, newStack)
+                        --add this body to the followers
+                        table.insert(self.touchMap[touch.id].followers, body)
+                        --if there's no stack, make one--identified by top body
+                        if self.stacks[self.touchMap[touch.id].body] == nil then
+                            local newStack = {self.touchMap[touch.id].body, body}
+                            self.stacks[self.touchMap[touch.id].body] = newStack
+                            table.insert(self.stacks, newStack)
+                            for i, v in ipairs(self.stacks[self.touchMap[touch.id].body]) do
+                                print(i, v.shortName)
+                            end
+                            --print(self.stacks[self.touchMap[touch.id].body])
+                        else                       
+                            --if there is, add body to it
+                            table.insert(self.stacks[self.touchMap[touch.id].body], body)
+                            for i, v in ipairs(self.stacks[self.touchMap[touch.id].body]) do
+                                print(i, v.shortName)
+                            end
+                        end
                     end
                 end
             end
