@@ -127,9 +127,6 @@ function Card:init(rank, suit)
 end
 
 function Card:draw()
-    if CodeaUnit.isRunning then
-        print(self.body.shortName)
-    end
     pushMatrix()
     resetMatrix()
     translate(self.body.x,self.body.y)

@@ -3,16 +3,26 @@ function testPhysicsDebug()
     
     CodeaUnit.detailed = true
     CodeaUnit.skip = false
-    
     -- local shouldWipeDebugDraw = false
     local card, card2, fakeBeginTouch, fakeMovingTouch, fakeEndTouch
+    local cardsHolder, cardsIndexedByBodiesHolder, stacksHolder
     
     _:describe("Testing PhysicsDebugDraw", function()
         
         _:before(function()
+            shouldReport = true
+        --    if not CodeaUnit.doBeforeAndAfter then return end
+            shouldReport = false
             card = Card(3, "hearts")
             card2 = Card(7, "clubs")
             card3 = Card(13, "hearts")
+            cardsHolder = cardTable.cards
+            cardTable.cards = {}
+            cardsIndexedByBodiesHolder = cardTable.cardsWithBodiesAsKeys
+            cardTable.cardsWithBodiesAsKeys = {}
+            stacksHolder = debugDraw.stacks
+            debugDraw.stacks = {}
+            cardTable.stacks = debugDraw.stacks
             debugDraw:addBody(card.body)
             debugDraw:addBody(card2.body)
             debugDraw:addBody(card3.body)
@@ -26,6 +36,9 @@ function testPhysicsDebug()
         end)
         
         _:after(function()
+            shouldReport = true
+         --   if not CodeaUnit.doBeforeAndAfter then return end
+            shouldReport = false
             actualString = "not that"
             desiredString = ""
             remove(debugDraw.bodies, card.body)
@@ -39,6 +52,10 @@ function testPhysicsDebug()
             card3.body:destroy()
             card, card2, card3 = nil, nil, nil
             debugDraw.touchMap[fakeBeginTouch.id] = nil
+            cardTable.cards = cardsHolder
+            cardTable.cardsWithBodiesAsKeys = cardsIndexedByBodiesHolder
+            debugDraw.stacks = stacksHolder
+            cardTable.stacks = debugDraw.stacks
         end)
         
         function setupTwoCardsAndBeginTouch()
@@ -87,12 +104,6 @@ function testPhysicsDebug()
         end)
         
         _:test("only top card in a stack responds to a BEGIN touch", function()
-            --[[
-            card.body.x, card.body.y = WIDTH, HEIGHT
-            card2.body.x, card2.body.y = card.body.x, card.body.y
-            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
-            debugDraw:touched(fakeBeginTouch)
-            ]]
             setupTwoCardsAndBeginTouch()
             _:expect("touchMap has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card2.body)
             _:expect("right number of followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
@@ -115,32 +126,80 @@ function testPhysicsDebug()
             _:expect(#debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
         end)
         
+        function trace (event, line)
+            local s = debug.getinfo(2).short_src
+            print(s .. ":" .. line)
+        end
+        
+        function traceCard2body(event, line)
+           -- local firstCardBody = cardTable.cards[1].body
+            if 
+                shouldReport 
+             and
+           --      card2 and
+          --      card3 and
+         --        bugTest and
+                 cardTable.stacks[1] and
+                 cardTable.stacks[1][1] 
+                then
+                print(cardTable.stacks[1][1].shortName.." "..tostring(cardTable.stacks[1][1].position))
+                --local pos = stack[1].position
+            --[[
+                for i, v in ipairs( cardTable.stacks[1]) do
+                    print(tostring(cardTable.cardPosUtility))
+                    print(tostring(v.shortName).." "..tostring(v.position)..tostring(v.owningClass))
+                end
+            ]]
+                local s = debug.getinfo(2).short_src
+                print(s .. ":" .. line)
+                print("------")
+                breakpoint()
+            end
+        end
+              
         _:test("a card DOES become a follower if the touch started outside its bounds", function()
+        --    CodeaUnit.doBeforeAndAfter = false
             card.body.x, card.body.y = 1500, 1500
             card2.body.x, card2.body.y = 20, 20
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
             debugDraw:touched(fakeBeginTouch)
+            bugTest = true
+
+            debug.sethook(traceCard2body, "l")
+            --phony comment
+            shouldReport = false
+            function fake()               
+            end
+            shouldReport = true
+            fake()
+            shouldReport = false
             debugDraw:touched(fakeMovingTouch)
             _:expect("--a: one follower if touch started outside card2 then went in", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
             _:expect("--b: card2 is the follower", debugDraw.touchMap[fakeBeginTouch.id].followers).has(card2.body)
+            CodeaUnit.doBeforeAndAfter = true
         end)
         
         _:test("touch table is cleared from touchMap when touch ends", function()
+  --  if true then return end
+            CodeaUnit.doBeforeAndAfter = false
             card.body.x, card.body.y = WIDTH, HEIGHT
             card2.body.x, card2.body.y = 0, 0
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
             fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
             debugDraw:touched(fakeBeginTouch)
+
             debugDraw:touched(fakeMovingTouch)
             debugDraw:touched(fakeEndTouch)
             local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
             _:expect(touchMapIsNil).is(true)
-            
+            CodeaUnit.doBeforeAndAfter = true
         end)
         
         _:test("touchMap is cleared when touch is cancelled", function()
+   --         if true then return end
+            CodeaUnit.doBeforeAndAfter = false
             card.body.x, card.body.y = WIDTH, HEIGHT
             card2.body.x, card2.body.y = 0, 0
             fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
@@ -156,9 +215,12 @@ function testPhysicsDebug()
             debugDraw:touched(fakeEndTouch)
             local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
             _:expect("--e: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
+            CodeaUnit.doBeforeAndAfter = false
         end)
         
-        _:test("badge creation", function()
+        _:test("stack creation", function()
+   --         if true then return end
+            CodeaUnit.doBeforeAndAfter = false
             local cardDistanceMin = card.height * 1.1
             card.body.x, card.body.y = 1500, 1500
             print(card.body.x, card.body.y)
@@ -192,20 +254,29 @@ function testPhysicsDebug()
             debugDraw:touched(fakeFurtherMovingTouch)
             _:expect("--h: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
             _:expect("--i: third card touched is also added", stackWithRightBody).has(card3.body)
-            local stackIdGone = debugDraw.stacks[card.body] == nil
+            
             local notInStack = true
             for _, stack in ipairs(debugDraw.stacks) do
                 if stack[1] == card.body then
                     notInStack = false
                 end
             end
+            
+            --have to end touch to test moving the top card off a stack. So that should go in a separate test function.
+            
             _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
             --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
             --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
             --  a touch map counts stacked cards and creates a badge
             -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
+            CodeaUnit.doBeforeAndAfter = false
+end)
+
+        _:test("stack separation", function()
+            --gotta make a stack artificslly here
+            _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
         end)
-    end)
+end)
 end
 
 
@@ -502,7 +573,6 @@ function PhysicsDebugDraw:touched(touch)
                     -- self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
                     --i think this is adding the same table forvthe same id key 52 times...
                     self:addTouchToTouchMap(touch, body)
-                    print("touchmap: "..self.touchMap[touch.id].body.shortName)
                     table.remove(self.bodies, i)
                     table.insert(self.bodies, body)
                     --maybe not now?
@@ -513,11 +583,9 @@ function PhysicsDebugDraw:touched(touch)
             end
         end
     elseif touch.state == MOVING and self.touchMap[touch.id] then
+        shouldReport = true
         --  print("moving touchmap: "..self.touchMap[touch.id].body.shortName)
         self.touchMap[touch.id].tp = touchPoint
-        if CodeaUnit.isRunning then
-            print("touchPoint: "..tostring(touchPoint))
-        end
         for _,body in ipairs(self.bodies) do
             if body.owningClass == "card" then
                 --print("moving, ",body.shortName, body.owningClass)
@@ -525,11 +593,6 @@ function PhysicsDebugDraw:touched(touch)
                 if body.type == DYNAMIC and body:testPoint(touchPoint) and body ~= self.touchMap[touch.id].body then
                     --exclude any subsequent body that the previous touch was *inside*
                     if not body:testPoint(touch.prevPos) then
-                        if CodeaUnit.isRunning then
-                            print ("body: "..tostring(body))
-                            print ("touchPoint: "..tostring(touchPoint))
-                            print ("result: "..tostring(body:testPoint(touchPoint)))
-                        end
                         --add this body to the followers
                         table.insert(self.touchMap[touch.id].followers, body)
                         --if there's no stack, make one--identified by top body
@@ -537,21 +600,16 @@ function PhysicsDebugDraw:touched(touch)
                             local newStack = {self.touchMap[touch.id].body, body}
                             self.stacks[self.touchMap[touch.id].body] = newStack
                             table.insert(self.stacks, newStack)
-                            for i, v in ipairs(self.stacks[self.touchMap[touch.id].body]) do
-                                print(i, v.shortName)
-                            end
                             --print(self.stacks[self.touchMap[touch.id].body])
                         else                       
                             --if there is, add body to it
                             table.insert(self.stacks[self.touchMap[touch.id].body], body)
-                            for i, v in ipairs(self.stacks[self.touchMap[touch.id].body]) do
-                                print(i, v.shortName)
-                            end
                         end
                     end
                 end
             end
         end
+        shouldReport = false
         returnValue = true
         --delete any touchMap for an end touch
     elseif touch.state == ENDED and self.touchMap[touch.id] then
@@ -572,9 +630,6 @@ function PhysicsDebugDraw:touched(touch)
         returnValue = true
     elseif touch.state == CANCELLED then
         --clear out remaining touchMaps and followings when any touch is cancelled
-        if CodeaUnit.isRunning then
-            print("# of touchMaps: "..#self.touchMap)
-        end
         --[[
         for key, map in pairs(self.touchMap) do
         --   local flooredId = math.floor(map.id)
@@ -592,6 +647,7 @@ function PhysicsDebugDraw:touched(touch)
         --  print("sent touch to card table from debugDraw")
         cardTable:touched(touch, self.bodies, firstBodyTouched)
     end
+
     --print("PDD about to return value")
     return returnValue
 end

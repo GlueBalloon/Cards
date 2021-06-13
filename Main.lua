@@ -2,7 +2,6 @@
 --saveImage("Project:Icon", readImage(asset.preview))
  
 function testRootFunctions()
-    
     CodeaUnit.detailed = false
     CodeaUnit.skip = false
     -- local shouldWipeDebugDraw = false
@@ -248,6 +247,7 @@ end
 
 -- This function gets called once every frame
 function draw()
+
     -- This sets the background color to black
     background(0, 0, 0)
 
@@ -256,7 +256,6 @@ function draw()
         setTest(TestNumber)
     end
       ]]
-
     cardTable:draw()
     debugDraw:draw()
 
@@ -386,7 +385,7 @@ function dump(tTable, separator, preserveOrder)
         return "{}"
     end
     if #ivStrings ~= 0 then
-        returnString = returnString.."///indexed values/// "
+        returnString = returnString.."///indexed/// "
         for i, v in ipairs(ivStrings) do
             returnString = returnString..v
             if i ~= #ivStrings then
@@ -400,7 +399,7 @@ function dump(tTable, separator, preserveOrder)
         if #ivStrings ~= 0 then
             returnString = returnString..separator
         end
-        returnString = returnString.."///keyed values/// "
+        returnString = returnString.."///keys/// "
         for i, v in ipairs(kvStrings) do
             returnString = returnString..v        
             if i ~= #ivStrings then
@@ -411,4 +410,23 @@ function dump(tTable, separator, preserveOrder)
         end
     end  
     return returnString.."\t"..separator.."}"
+end
+
+parameter.boolean("breakpointsEnabled", false)
+
+breakpoint = function()
+    if not breakpointsEnabled then return end
+    print("tap tab to advance a line, type 'qq' to exit breakpoints")
+    local buffer = ""
+    showKeyboard()
+    while buffer ~= "\t" do
+        buffer = keyboardBuffer()
+        bufferLength = string.len(buffer)
+        buffer = string.sub(buffer, string.len(buffer)-1)
+        if buffer == "qq" then
+            buffer = "\t"
+            breakpointsEnabled = false
+        end
+    end
+    hideKeyboard()
 end

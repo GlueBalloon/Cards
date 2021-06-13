@@ -1,13 +1,15 @@
 --from an original by jakesankey
 
 CodeaUnit = class()
+CodeaUnit.isRunning = false
+CodeaUnit.doBeforeAndAfter = true
 
 function CodeaUnit:describe(feature, allTests)
     print(string.format("\t****\n\t%s\n\t****", feature))
     if self.skip == true then
         print("\t * Tests Skipped")
     else
-        self.isRunning = true
+        CodeaUnit.isRunning = true
         self.tests = 0
         self.ignored = 0
         self.failures = 0
@@ -22,7 +24,7 @@ function CodeaUnit:describe(feature, allTests)
         local summary = string.format("\t\t\t----------\n\t\t\tPass: %d\n\t\t\tIgnore: %d\n\t\t\tFail: %d", passed, self.ignored, self.failures)
         
         print(summary)
-        self.isRunning = false
+        CodeaUnit.isRunning = false
     end
 end
 

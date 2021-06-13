@@ -168,11 +168,6 @@ function CardTable:draw()
         local cardW, cardH = self.cards[1].width, self.cards[1].height
         -- if true then return end
         for i,stack in ipairs(self.stacks) do
-            --[[
-            for i, body in ipairs(stack) do
-                print("cardTable", body.shortName,body.x,body.owningClass)
-                end
-            ]]
             local pos = stack[1].position
             pos = pos - vec2(cardW * 0.5, cardH * 0.5)
             pushStyle()
