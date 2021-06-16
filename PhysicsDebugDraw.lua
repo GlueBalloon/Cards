@@ -543,7 +543,7 @@ function PhysicsDebugDraw:draw()
     
     popStyle()
     
-end
+end 
 
 function PhysicsDebugDraw:touched(touch)
     --print("PDD touched")
@@ -597,6 +597,9 @@ function PhysicsDebugDraw:touched(touch)
                         table.insert(self.touchMap[touch.id].followers, body)
                         --if there's no stack, make one--identified by top body
                         if self.stacks[self.touchMap[touch.id].body] == nil then
+                            
+                            Make card stack class out of preference for deletable code
+                            
                             local newStack = {self.touchMap[touch.id].body, body}
                             self.stacks[self.touchMap[touch.id].body] = newStack
                             table.insert(self.stacks, newStack)

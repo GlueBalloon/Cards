@@ -1,5 +1,8 @@
-CardStack = class()
+CardStacks = class()
 
+function CardStacks:init()
+    self.stacks = {}
+end
 
 --[[
 function t   estCardStack() --have to mess up name or CodeaUnit tries to run it
@@ -66,7 +69,7 @@ function CardStack:init(startingCards)
   --  self:arrangeStack() --gotta change to just make stack
 end
 
-function CardStack:addCard(card)
+function CardStack:stackCards(...)
     table.insert(self.cards, card)
 end
 
@@ -77,74 +80,3 @@ function CardStack:shuffle()
     end
 end
 
---[[
-function CardStack:arrangeStack()
-    if #self.cards <= 0 then return end
-    --self.image = image(self.width, self.height)
-  --  setContext(self.image)
-    for i, card in ipairs(self.cards) do
-        local jitterX, jitterY = math.random(8), math.random(8)
-        local tilt = math.random(-8,8)
-        pushMatrix()
-        popStyle()
-        resetMatrix()
-        translate(self.width/2+jitterX,self.height/2+jitterY)
-        rotate(tilt)
-        if i < #self.cards then
-            tint(236-((#self.cards-i)*1.5))
-        end
-        card.body.x, card.body.y = self.body.x+jitterX, self.body.y+jitterY
-        card.angle = self.body.angle + tilt
-   -- sprite(card.back,0,0,card.width,card.height)
-        noTint()
-        pushStyle()
-        popMatrix()
-    end
-    setContext()
-end
-  ]]
-
-function CardStack:draw()
-    if self.body == nil then return end
-    pushMatrix()
-    pushStyle()
-    resetMatrix()
-    translate(self.body.x,self.body.y)
-    rotate(self.body.angle)
-    fill(237, 6, 159, 95)
-    rectMode(CENTER)
-    rect(0,0,self.width,self.height)
-    popStyle()
-    popMatrix()
-
-    --[[
-    pushMatrix()
-    pushStyle()
-    noStroke()
-    translate(self.body.x,self.body.y)
-    fill(237, 6, 159, 95)
-    rectMode(CENTER)
-    rect(0,0,self.width,self.height)
-    for i, card in ipairs(self.cards) do
-        card:draw()
-    end
-    --sprite(self.image,0,0,self.width,self.height)
-    popStyle()
-    popMatrix()
-      ]]
-end
-
-function CardStack:touched(touch)
-    --local touchPoint = vec2(touch.pos.x, touch.pos.y)
-    local selfTapped = self.body:testPoint(touch.pos)
-    if selfTapped and touch.tapCount == 1 and touch.state == ENDED then
-        print("you tapped me, a card stack")
-    end
-    --[[
-    if selfTapped and touch.state == MOVING then
-        local previousAngle = self.body.angle
-        self.body.position = touch.pos
-        self.body.angle = previousAngle
-    end
-      ]]
-end
