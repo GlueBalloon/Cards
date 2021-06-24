@@ -1,7 +1,8 @@
-CardStacks = class()
+CardStacker = class()
 
-function CardStacks:init()
+function CardStacker:init()
     self.stacks = {}
+    print(#self.stacks)
 end
 
 --[[
@@ -49,7 +50,8 @@ function t   estCardStack() --have to mess up name or CodeaUnit tries to run it
 end
   ]]
 
-function CardStack:init(startingCards)
+--[[
+function CardStacker:init(startingCards)
     self.cards = {}
     self.width = WIDTH * 0.07
     self.height = WIDTH * 0.095
@@ -68,12 +70,13 @@ function CardStack:init(startingCards)
     end
   --  self:arrangeStack() --gotta change to just make stack
 end
+]]
 
-function CardStack:stackCards(...)
+function CardStacker:stackCards(...)
     table.insert(self.cards, card)
 end
 
-function CardStack:shuffle()
+function CardStacker:shuffle()
     for i = #self.cards, 2, -1 do
         local j = math.random(i)
         self.cards[i], self.cards[j] = self.cards[j], self.cards[i]

@@ -56,11 +56,14 @@ function CardTable:init(physicsDraw)
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    self.stacks = physicsDraw.stacks
+    self.physics = physicsDraw
+    --self.stacks = physicsDraw.stacks
+    self.stacker = CardStacker()
+    print(self.stacker.stacks)
     local deck = CardTable.makeDeck()
    -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
-        debugDraw:addBody(card.body)
+        self.physics:addBody(card.body)
         self:addCard(card)
     end    
     --[[
@@ -136,15 +139,15 @@ function CardTable:createScreenBorders() --size is size of 3D box
     local allBounds = {boundsBottom,boundsRight,boundsTop,boundsLeft}
     for i=1, #allBounds do
         allBounds[i].type = STATIC
-        debugDraw:addBody(allBounds[i])
+        self.physics:addBody(allBounds[i])
     end
     return boundingBox
 end
 
 function CardTable:cleanup()
-    for key, body in pairs(debugDraw.bodies) do
-        remove(debugDraw.bodies, body)
-        body:destroy()
+    for key, body in pairs(self.physics.bodies) do
+        remove(self.physics.bodies, body)
+        self.physics:destroy()
         self.cards[key] = nil
     end
     --[[
@@ -164,7 +167,7 @@ function CardTable:draw()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-    if #self.stacks > 0 then
+    if #self.stacker.stacks > 0 then
         local cardW, cardH = self.cards[1].width, self.cards[1].height
         -- if true then return end
         for i,stack in ipairs(self.stacks) do

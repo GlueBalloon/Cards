@@ -20,9 +20,8 @@ function testPhysicsDebug()
             cardTable.cards = {}
             cardsIndexedByBodiesHolder = cardTable.cardsWithBodiesAsKeys
             cardTable.cardsWithBodiesAsKeys = {}
-            stacksHolder = debugDraw.stacks
-            debugDraw.stacks = {}
-            cardTable.stacks = debugDraw.stacks
+            stacksHolder = cardTable.stacks
+            debugDraw.stacks = cardTable.stacks
             debugDraw:addBody(card.body)
             debugDraw:addBody(card2.body)
             debugDraw:addBody(card3.body)
@@ -54,8 +53,8 @@ function testPhysicsDebug()
             debugDraw.touchMap[fakeBeginTouch.id] = nil
             cardTable.cards = cardsHolder
             cardTable.cardsWithBodiesAsKeys = cardsIndexedByBodiesHolder
-            debugDraw.stacks = stacksHolder
-            cardTable.stacks = debugDraw.stacks
+            cardTable.stacks = stacksHolder
+            debugDraw.stacks = cardTable.stacks
         end)
         
         function setupTwoCardsAndBeginTouch()
@@ -166,7 +165,7 @@ function testPhysicsDebug()
             debugDraw:touched(fakeBeginTouch)
             bugTest = true
 
-            debug.sethook(traceCard2body, "l")
+           -- debug.sethook(traceCard2body, "l")
             --phony comment
             shouldReport = false
             function fake()               
@@ -231,12 +230,12 @@ function testPhysicsDebug()
             fakeTouchRightNextToFirstMovingTouch = fakeTouch(card2.body.x + 1, card2.body.y, MOVING, 1, 4373, fakeMovingTouch.pos)
             --redefine further touch to include tiny movement above
             fakeFurtherMovingTouch = fakeTouch(card3.body.x, card3.body.y, MOVING, 1, 4373, fakeTouchRightNextToFirstMovingTouch.pos)
-            local rightNumStacks = #debugDraw.stacks
+            local rightNumStacks = #cardTable.stacks
             debugDraw:touched(fakeBeginTouch)
-            _:expect("--a: after touch moves through one body, no stack is made", #debugDraw.stacks).is(rightNumStacks)
+            _:expect("--a: after touch moves through one body, no stack is made", #cardTable.stacks).is(rightNumStacks)
             debugDraw:touched(fakeMovingTouch)
             rightNumStacks = rightNumStacks + 1
-            _:expect("--b: after touch moves through two bodies, stack is made", #debugDraw.stacks).is(rightNumStacks)
+            _:expect("--b: after touch moves through two bodies, stack is made", #cardTable.stacks).is(rightNumStacks)
             local stackWithRightBody
             for i, stack in ipairs(debugDraw.stacks) do
                 if stack[1] == card.body then
@@ -279,6 +278,10 @@ end)
 end)
 end
 
+Maybe physics knows nothing about the stacker
+maybe the card table runs all cards through the stacker
+maybe the stacker than returns the stacks as sets
+maybe card table knows nothing about physics, and physics just responds to card table.
 
 PhysicsDebugDraw = class()
 
@@ -416,7 +419,7 @@ function PhysicsDebugDraw:draw()
         local _, touchStrH = textSize(touchStr)
         text(touchStr, xPos, HEIGHT - strH - 10 - touchStrH - 10)
         
-        stacksString = "stacks: "..dump(self.stacks, "\n")
+        stacksString = "stacks: "..dump(cardTable.stacks, "\n")
         local _, stkStrH = textSize(stacksString)
         fill(92, 236, 67)
         text(stacksString, xPos, HEIGHT - strH - 10 - touchStrH - 10 - stkStrH - 20)
@@ -598,7 +601,6 @@ function PhysicsDebugDraw:touched(touch)
                         --if there's no stack, make one--identified by top body
                         if self.stacks[self.touchMap[touch.id].body] == nil then
                             
-                            Make card stack class out of preference for deletable code
                             
                             local newStack = {self.touchMap[touch.id].body, body}
                             self.stacks[self.touchMap[touch.id].body] = newStack
