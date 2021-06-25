@@ -1,3 +1,35 @@
+function testCardStacker()
+    
+    CodeaUnit.detailed = true
+    CodeaUnit.skip = false
+    
+    _:describe("Testing Stacker", function()
+        
+        local stacker
+        
+        _:before(function()
+            stacker = CardStacker()
+        end)
+        
+        _:after(function()
+        end)
+        
+        _:test("inputs cards, outputs stacks", function()
+            local output = stacker:stacksFor({})
+            _:expect(#output).is(1)
+        end)        
+    end)
+end
+
+--[[
+Maybe physics knows nothing about the stacker
+maybe the card table runs all cards through the stacker
+maybe the stacker than returns the stacks as sets
+maybe card table knows nothing about physics, and physics just responds to card table.
+]]
+
+
+
 CardStacker = class()
 
 function CardStacker:init()
@@ -72,7 +104,7 @@ function CardStacker:init(startingCards)
 end
 ]]
 
-function CardStacker:stackCards(...)
+function CardStacker:stacksFor(...)
     table.insert(self.cards, card)
 end
 

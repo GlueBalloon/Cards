@@ -278,11 +278,6 @@ end)
 end)
 end
 
-Maybe physics knows nothing about the stacker
-maybe the card table runs all cards through the stacker
-maybe the stacker than returns the stacks as sets
-maybe card table knows nothing about physics, and physics just responds to card table.
-
 PhysicsDebugDraw = class()
 
 function PhysicsDebugDraw:init()

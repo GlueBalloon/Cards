@@ -99,6 +99,7 @@ end
 
 function setup()
     debugDraw = PhysicsDebugDraw()
+print(debugDraw)
     cardTable = CardTable(debugDraw)
     tests = {cardTable}
     setTest(1)

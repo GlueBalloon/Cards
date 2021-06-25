@@ -52,11 +52,13 @@ CardTable.tableContainsCard = function (targetTable, card)
 end
 
 function CardTable:init(physicsDraw)
+    print(physicsDraw)
+    self.physics = physicsDraw
     physics.gravity(0,0)
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    self.physics = physicsDraw
+    print(self.physics)
     --self.stacks = physicsDraw.stacks
     self.stacker = CardStacker()
     print(self.stacker.stacks)
