@@ -111,7 +111,7 @@ function Card:init(rank, suit)
     local hypotenoooooose = math.sqrt(hypoSquared)
     self.width = hypotenoooooose * 0.0853333
     self.height = hypotenoooooose * 0.1196666
-    self.body = createBox(WIDTH/2, 100, self.width, self.height)
+    self.body = createBox(WIDTH/2, self.height * 0.6, self.width, self.height)
     self.body.linearDamping = 4 --has something to do with momentum
     self.body.angularDamping = 5
     self.body.categories={2}

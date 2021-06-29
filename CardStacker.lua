@@ -6,17 +6,33 @@ function testCardStacker()
     _:describe("Testing Stacker", function()
         
         local stacker
+        local deck
         
         _:before(function()
             stacker = CardStacker()
+            deck = CardTable.makeDeck()
         end)
         
         _:after(function()
         end)
         
-        _:test("inputs cards, outputs stacks", function()
-            local output = stacker:stacksFor({})
-            _:expect(#output).is(1)
+        _:test("inputs cards, outputs table", function()
+            local output = stacker:stacksFor(deck)
+            _:expect(type(output)).is("table")
+        end)        
+        
+        _:test("if all cards in one spot, stack table has all cards", function()
+            local x, y = math.random(WIDTH), math.random(HEIGHT)
+            for _, card in ipairs(deck) do
+                card.x, card.y = x, y
+            end
+            local output = stacker:stacksFor(deck)
+            _:expect(#output[1]).is(#deck)
+        end)        
+        
+        _:test("deck split between two positions returns two stacks", function()
+            local output = stacker:stacksFor(deck)
+            _:expect(#output).is(2)
         end)        
     end)
 end
@@ -104,8 +120,8 @@ function CardStacker:init(startingCards)
 end
 ]]
 
-function CardStacker:stacksFor(...)
-    table.insert(self.cards, card)
+function CardStacker:stacksFor(cards)
+    return {cards, {}}
 end
 
 function CardStacker:shuffle()
