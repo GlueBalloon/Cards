@@ -440,7 +440,7 @@ function PhysicsDebugDraw:draw()
         
     end
     
-    local shouldDraw = true
+    local shouldDraw = false
     if shouldDraw then
         pushStyle()
         smooth()

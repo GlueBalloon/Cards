@@ -164,23 +164,18 @@ function CardTable:draw()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-        
-        --temporary:
-        --if true then return end
-        
-        
-        
+
     for i,stack in ipairs(self.stacker.stacks) do
         if #stack > 1 then
             local bottomCard = stack[#stack]
             local cardW, cardH = bottomCard.width, bottomCard.height
             local pos = bottomCard.body.position
-            pos = pos - vec2(cardW * 0.45, cardH * 0.45)
+            pos = pos + vec2(cardW * 0.5, cardH * 0.5)
             pushStyle()
-            fill(255, 14, 0)
+            fill(255, 14, 0, 215)
             ellipse(pos.x, pos.y, cardW * 0.25)
             fill(255)
-            font("HelveticaNeue-Bold")
+            font("HelveticaNeue-Light")
             fontSize(cardW * 0.15)
             text(#stack, pos.x, pos.y)
             popStyle()
