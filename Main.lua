@@ -2,8 +2,8 @@
 --saveImage("Project:Icon", readImage(asset.preview))
  
 function testRootFunctions()
-    CodeaUnit.detailed = false
-    CodeaUnit.skip = false
+    CodeaUnit.detailed = true
+    CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
     
     _:describe("Testing root functions", function()
@@ -94,16 +94,110 @@ function testRootFunctions()
             --print(testString)
             _:expect(result).is(true)
         end)
+        
+        _:test("separateArrayAndHashTablesIn(...) returns correct tables", function()
+            --create result flags
+            local totalResult, arrayCountRight, arrayResult, hashCountRight, hashResult
+            --make test table 
+            local tableForKey = {}
+            local testTable = {[1] = "one", [2] = "two", [4] = "four", [10] = "ten", 
+                ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3", [3.3] = "three point three"}
+            --make verification tables to check results against
+            local correctArray = {}
+            table.insert(correctArray, "one"); table.insert(correctArray, "two"); correctArray[4] = "four"; correctArray[10] = "ten"
+            local correctHash = {[3.3] = "three point three", ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3"}
+            --run the function
+            local returnedArray, returnedHash = separateArrayAndHashTablesIn(testTable)
+            --inspect counts
+            local arrayCounter = 0
+            for i, v in pairs(returnedArray) do
+                arrayCounter = arrayCounter + 1
+            end
+            arrayCountRight = arrayCounter == 4
+            local hashCounter = 0
+            for i, v in pairs(returnedHash) do
+                hashCounter = hashCounter + 1
+            end
+            hashCountRight = hashCounter == 4
+            --inspect contents
+            if arrayCountRight and hashCountRight then
+                arrayResult = true 
+                hashResult = true 
+                for k, v in pairs(correctArray) do
+                    if v ~= returnedArray[k] then arrayResult = false end
+                end
+                for k, v in pairs(correctHash) do
+                    if v ~= returnedHash[k] then hashResult = false end
+                end
+            end
+            function stringFrom(thisTable)
+                local returnString = ""
+                for k, v in pairs(thisTable) do
+                    returnString = returnString.."("..tostring(k).." : "
+                    returnString = returnString..tostring(v)..") "
+                end
+                return returnString
+            end
+            --debugging statements: change to "if false" to turn off
+            if true then
+                print("correctArray: "..stringFrom(correctArray))
+                print("returnedArray: "..stringFrom(returnedArray))
+                print("correctHash: "..stringFrom(correctHash))
+                print("returnedHash: "..stringFrom(returnedHash))
+                print("arrayCountRight: ", arrayCountRight)
+                print("arrayResult: ", arrayResult)
+                print("hashCountRight: ", hashCountRight)
+                print("hashResult: ", hashResult)
+            end
+            --overall result is AND combination of all results
+            totalResult = arrayCountRight and arrayResult and hashCountRight and hashResult
+            _:expect(totalResult).is(true)
+        end)
     end)
 end
 
 function setup()
     debugDraw = PhysicsDebugDraw()
-print(debugDraw)
     cardTable = CardTable(debugDraw)
     tests = {cardTable}
     setTest(1)
     defaultGravity = physics.gravity()
+    --[[
+    print("#debugDraw.bodies before testCircle: ", #debugDraw.bodies)
+    local testCircle = createCircle(300, 150, 10)
+    print("#debugDraw.bodies after testCircle created: ", #debugDraw.bodies)
+    local i, removeAtI = 1, nil
+    while removeAtI == nil do
+        if debugDraw.bodies[i] == testCircle then
+            removeAtI = i
+        end
+        i = i + 1 
+    end
+    print("removeAtI: ", removeAtI)
+    table.remove(debugDraw.bodies, removeAtI)
+    print("#debugDraw.bodies after testCircle removed: ", #debugDraw.bodies)
+    testCircle:destroy()
+    print("#debugDraw.bodies after testCircle destroyed: ", #debugDraw.bodies)
+    local dummy
+    local i = 1
+    while dummy == nil do
+        if debugDraw.bodies[i] == testCircle then
+            dummy = debugDraw.bodies[i]
+            break
+        end
+        i = i + 1
+        if i == 53 then break end
+    end
+    if dummy == testCircle then
+        print("Body still in table after destruction")
+    else
+        print("Body not in table after destruction")
+    end
+    
+    testCircle = nil
+    print("52: ", debugDraw.bodies[52])
+    print("53: ", debugDraw.bodies[53])
+    ]]
 end
 
 function setTest(t)
@@ -117,6 +211,18 @@ function setTest(t)
     currentTest:setup()
 end
 
+function separateArrayAndHashTablesIn(thisTable)
+    local arrayTable, hashTable = {}, {}
+    for k, v in pairs(thisTable) do
+        if type(k) == "number" and k == math.ceil(k) then
+            arrayTable[k] = v
+        else
+            hashTable[k] = v
+        end
+    end
+    return arrayTable, hashTable
+end
+    
 function isarray(tableT)   
     --has to be a table in the first place of course
     if type(tableT) ~= "table" then return false end  
@@ -206,7 +312,7 @@ function createBox(x,y,w,h)
     box.y = y
     box.restitutions = 0.25
     box.sleepingAllowed = false
-   --debugDraw:addBody(box)
+    debugDraw:addBody(box)
     return box
 end
 
@@ -323,11 +429,11 @@ function stringIfBody(possible)
     end
 end
 
-function dump(tTable, separator, preserveOrder)
+function tableToString(tTable, separator, preserveOrder)
     if not separator then separator = "" end
     local returnString = separator.."{   "..separator
     local tableWithDescriptiveBodies, thisKey = {}, ""
-    --go through guven table
+    --go through given table
     for k, v in pairs(tTable) do
         --make concatenatable string for value because it could be a table
         local valueString = ""
@@ -345,7 +451,7 @@ function dump(tTable, separator, preserveOrder)
             if(v==tTable) then           
                 valueString = valueString..": <-(self reference)"         
             else            
-                valueString = valueString.." "..dump(v)       
+                valueString = valueString.." "..tableToString(v)       
             end       
         else --if not a table:
             --format value string specially for functions
@@ -369,19 +475,8 @@ function dump(tTable, separator, preserveOrder)
     end
     --now iterate through all keys left and make k,v strings
     for k, v in pairs(tableWithDescriptiveBodies) do
-        table.insert(kvStrings, "["..k.."]: "..v)
+        table.insert(kvStrings, "["..tostring(k).."]: "..v)
     end
-    --[[
-    if not preserveOrder then
-        table.sort(remade)
-    end
-    ]]
-    --[[
-    local indexedKVS = {}
-    for k, v in pairs(keyValueStrings) do
-        table.insert(indexedKVS, " "..k..": "..v)
-    end
-    ]]
     if #ivStrings == 0 and #kvStrings == 0 then
         return "{}"
     end

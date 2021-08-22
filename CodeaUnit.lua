@@ -9,7 +9,6 @@ function CodeaUnit:describe(feature, allTests)
     if self.skip == true then
         print("\t * Tests Skipped")
     else
-        CodeaUnit.isRunning = true
         self.tests = 0
         self.ignored = 0
         self.failures = 0
@@ -24,7 +23,6 @@ function CodeaUnit:describe(feature, allTests)
         local summary = string.format("\t\t\t----------\n\t\t\tPass: %d\n\t\t\tIgnore: %d\n\t\t\tFail: %d", passed, self.ignored, self.failures)
         
         print(summary)
-        CodeaUnit.isRunning = false
     end
 end
 
@@ -140,6 +138,7 @@ function CodeaUnit:expect(...)
 end
 
 CodeaUnit.execute = function()
+    CodeaUnit.isRunning = true
     for i,v in pairs(listProjectTabs()) do
         local source = readProjectTab(v)
         for match in string.gmatch(source, "function%s-(test.-%(%))") do

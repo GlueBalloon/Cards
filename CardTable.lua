@@ -51,23 +51,17 @@ CardTable.tableContainsCard = function (targetTable, card)
     else return false end
 end
 
-function CardTable:init(physicsDraw)
-    print(physicsDraw)
-    self.physics = physicsDraw
+function CardTable:init()
     physics.gravity(0,0)
     self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    print(self.physics)
-    --self.stacks = physicsDraw.stacks
-    self.stacker = CardStacker()
-    print(self.stacker.stacks)
     local deck = CardTable.makeDeck()
-   -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
-        self.physics:addBody(card.body)
+       -- physics:addBody(card.body)
         self:addCard(card)
     end    
+    self.stacker = CardStacker(self.cards)
     --[[
     for k,v in pairs (self.cardsWithBodiesAsKeys) do
         print(k.shortName)
@@ -141,17 +135,17 @@ function CardTable:createScreenBorders() --size is size of 3D box
     local allBounds = {boundsBottom,boundsRight,boundsTop,boundsLeft}
     for i=1, #allBounds do
         allBounds[i].type = STATIC
-        self.physics:addBody(allBounds[i])
+        --physics:addBody(allBounds[i])
     end
     return boundingBox
 end
 
 function CardTable:cleanup()
-    for key, body in pairs(self.physics.bodies) do
-        remove(self.physics.bodies, body)
-        self.physics:destroy()
+    for key, body in pairs(physics.bodies) do
+        remove(physics.bodies, body)
         self.cards[key] = nil
     end
+    physics:destroy()
     --[[
     for i, stack in ipairs(self.stacks) do
         for i, card in ipairs(self.cards) do
@@ -163,24 +157,31 @@ function CardTable:cleanup()
 end
 
 function CardTable:draw()
+    self.stacker:refreshStacks()
     tint(255, 136)
     sprite(asset.felt, WIDTH/2,HEIGHT/2,WIDTH,HEIGHT)
     noTint()
     for i=1, #self.cards do
         self.cards[i]:draw()
     end
-    if #self.stacker.stacks > 0 then
-        local cardW, cardH = self.cards[1].width, self.cards[1].height
-        -- if true then return end
-        for i,stack in ipairs(self.stacks) do
-            local pos = stack[1].position
-            pos = pos - vec2(cardW * 0.5, cardH * 0.5)
+        
+        --temporary:
+        --if true then return end
+        
+        
+        
+    for i,stack in ipairs(self.stacker.stacks) do
+        if #stack > 1 then
+            local bottomCard = stack[#stack]
+            local cardW, cardH = bottomCard.width, bottomCard.height
+            local pos = bottomCard.body.position
+            pos = pos - vec2(cardW * 0.45, cardH * 0.45)
             pushStyle()
             fill(255, 14, 0)
-            ellipse(pos.x, pos.y, cardW * 0.2)
+            ellipse(pos.x, pos.y, cardW * 0.25)
             fill(255)
             font("HelveticaNeue-Bold")
-            fontSize(cardW*0.13)
+            fontSize(cardW * 0.15)
             text(#stack, pos.x, pos.y)
             popStyle()
         end
@@ -259,7 +260,7 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
             ]]
             local cardTouched = self.cardsWithBodiesAsKeys[firstBodyTouched]
             -- print("sending touch to card: "..firstBodyTouched.shortName)
-            cardTouched:touched(touch)
+            if cardTouched then cardTouched:touched(touch) end
         end
     end
     

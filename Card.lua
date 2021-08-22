@@ -119,6 +119,7 @@ function Card:init(rank, suit)
    -- self.body.info = {["kind"] = self:shortName(), ["ownerClass"] = self.class} <--don't need this, can store anything directly on body table, refactor code to remove references to this
     --debugDraw:addBody(self.body)
     self.body.owningClass = "card"
+    self.body.owner = self
     self.body.shortName = self:shortName()
     self.back = asset.cardBackMonkey
     self.face = asset[self:shortName()..".png"]

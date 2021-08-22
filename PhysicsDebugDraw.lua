@@ -2,7 +2,7 @@
 function testPhysicsDebug()
     
     CodeaUnit.detailed = true
-    CodeaUnit.skip = false
+    CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
     local card, card2, fakeBeginTouch, fakeMovingTouch, fakeEndTouch
     local cardsHolder, cardsIndexedByBodiesHolder, stacksHolder
@@ -113,9 +113,25 @@ function testPhysicsDebug()
             setupTwoCardsAndBeginTouch()
             fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
             debugDraw:touched(fakeMovingTouch)
-            _:expect(#debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
+            --_:expect(#debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
+            local cardForTouch = debugDraw.touchMap[fakeBeginTouch.id].body.owner
+            local stackKeyExists = false
+            if cardTable.stacker.stacks[cardForTouch] then
+                stackKeyExists = true
+            end
+            _:expect(stackKeyExists).is(false)
         end)
         
+        --maybe even a single card should be a stack? simpler than keeping track differently for different numbers of cards... also then there's one place to
+        --Find every position on the table where cards are without looking at each card
+        --TODO; FIND AND REPLACE THINGS THAT CAN JUST USE THE NEW BODY.OWNER PARAMETER
+           -- ok thats next test
+        _:test("a moving single card creates a stack", function()
+            setupTwoCardsAndBeginTouch()
+            local singleMovingCard = debugDraw.touchMap[fakeBeginTouch.id].body.owner
+            local stackForCardExists = cardTable.stacker.stacks[singleMovingCard] ~= nil
+            _:expect(stackForCardExists).is(true)
+        end)
         
         _:test("a card doesn't become a follower if the previous touch was inside its bounds", function()
             setupTwoCardsAndBeginTouch()
@@ -273,9 +289,25 @@ end)
 
         _:test("stack separation", function()
             --gotta make a stack artificslly here
-            _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
+            _:expect(stackIdGone and notInStack).is(true)
         end)
-end)
+        
+        _:test("removeBody reduces body count", function()
+            local originalCount = #debugDraw.bodies
+            local testCircle = createCircle(300, 150, 10)
+            debugDraw:removeBody(testCircle)
+            --gotta make a stack artificslly here
+            _:expect(#debugDraw.bodies).is(originalCount)
+        end)
+        
+        _:test("removeAndDestroyThoughYouStillGottaNilManually destroys body", function() 
+            local countBeforeCircle = #debugDraw.bodies
+            local testCircle = createCircle(300, 150, 10)
+            debugDraw:removeAndDestroyThoughYouStillGottaNilManually(testCircle)
+            testCircle = nil
+            _:expect(testCircle == nil).is(true)
+        end)
+    end)
 end
 
 PhysicsDebugDraw = class()
@@ -300,7 +332,6 @@ function PhysicsDebugDraw:addBody(body)
         end
     end
     self.bodies[#self.bodies+1] = body
-    --table.insert(self.bodies, body)
 end
 
 function PhysicsDebugDraw:bodiesList()
@@ -313,24 +344,12 @@ function PhysicsDebugDraw:bodiesList()
 end
 
 function PhysicsDebugDraw:removeBody(removeMe)
-    -- print("PhysicsDebugDraw:removeBody: iterating")
-    for i, iBody in ipairs(self.bodies) do
-        --    print("\tbody: "..tostring(iBody))
-        if iBody == removeMe then
-            local isNamed = false
-            if removeMe.shortName then
-                isNamed = true
-            end
-            --print("PhysicsDebugDraw:removeBody: body found: "..tostring(iBody.info.kind))
-            if isNamed then
-                -- print("PhysicsDebugDraw:removeBody: found card: "..removeMe.info.kind)
-                -- print("\tremoved: "..table.remove(self.bodies, i).shortName..", object at index "..tostring(i)..": "..self.bodies[i].shortName)
-            end
-            -- print("PhysicsDebugDraw:removeBody: found body")
-            remove(self.bodies, iBody)
-            return
-        end
-    end
+        remove(self.bodies, removeMe)
+end
+
+function PhysicsDebugDraw:removeAndDestroyThoughYouStillGottaNilManually(obliterateMe)
+    self:removeBody(obliterateMe)
+    obliterateMe:destroy()
 end
 
 function PhysicsDebugDraw:hasBody(verifyMe)
@@ -404,17 +423,17 @@ function PhysicsDebugDraw:draw()
         stacksString = stacksString.."\n"
         end
         ]]
-        str = "debug.bodies: "..dump(self.bodies, "", true)
+        str = "debug.bodies: "..tableToString(self.bodies, "", true)
         local _, strH = textSize(str)
         fill(255, 14, 0)
         text(str, xPos, HEIGHT - strH - 10)
         
         fill(0, 243, 255)
-        local touchStr = "touchMap: "..dump(self.touchMap, "\n")
+        local touchStr = "touchMap: "..tableToString(self.touchMap, "\n")
         local _, touchStrH = textSize(touchStr)
         text(touchStr, xPos, HEIGHT - strH - 10 - touchStrH - 10)
         
-        stacksString = "stacks: "..dump(cardTable.stacks, "\n")
+        stacksString = "stacks: "..tableToString(cardTable.stacker.stacks[1], "\n")
         local _, stkStrH = textSize(stacksString)
         fill(92, 236, 67)
         text(stacksString, xPos, HEIGHT - strH - 10 - touchStrH - 10 - stkStrH - 20)
@@ -482,14 +501,20 @@ function PhysicsDebugDraw:draw()
             pushMatrix()
             
             
-            --[[
-            print("----")
-            print(body.position)
-            print(body)
-            print(body.shortName)
-            ]]
+            if CodeaUnit.isRunning then 
+                if not body or not body.x then
+                    print("----", "body at index ", i)
+                    print(body.position)
+                    print(body, ", x: ", body.x, ", y: ", body.y)
+                    print(body.shortName)
+                    print("bodies: ", #self.bodies)
+                    -- assert(false, "stopping runtime")
+                    CodeaUnit.isRunning = false
+                end
+            end
             
             --local transAndRot = function()
+
             translate(body.x, body.y)
             rotate(body.angle)
             --    end
@@ -544,36 +569,25 @@ function PhysicsDebugDraw:draw()
 end 
 
 function PhysicsDebugDraw:touched(touch)
-    --print("PDD touched")
     --grab the touch as a vec2
     local touchPoint = vec2(touch.pos.x, touch.pos.y)
     local firstBodyTouched
     local returnValue = false
-    --print("PDD set touchPoint")
     --when a touch starts on a dynamic body, log it in touchMap
     if touch.state == BEGAN then
-        --    print("PDD detected beginning touch")
-        --[[
-        for i,body in ipairs(self.bodies) do
-        if body.type == DYNAMIC and body:testPoint(touchPoint) then
-        self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
-        returnValue = true
-        end
-        end
-        ]]
-        --  for _,body in ipairs(self.bodies) do
+        --count backwards through bodies
         for i=#self.bodies, 1, -1 do
+            --check if body belongs to a card
             local body = self.bodies[i]
-            --print(body.shortName, body.owningClass)
             if body.owningClass == "card" then 
+                --check if touch is indside body
                 if body.type == DYNAMIC and body:testPoint(touchPoint) then
-                    --  print(body.shortName, body.owningClass)
-                    -- self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = body:getLocalPoint(touchPoint)}
-                    --i think this is adding the same table forvthe same id key 52 times...
+                    --create touchMap for touch
                     self:addTouchToTouchMap(touch, body)
+                    --move body to end of bodies
                     table.remove(self.bodies, i)
                     table.insert(self.bodies, body)
-                    --maybe not now?
+                    --set flag to send this touch to the table
                     returnValue = true
                     firstBodyTouched = body
                     break
