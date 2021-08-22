@@ -374,7 +374,7 @@ function PhysicsDebugDraw:addTouchToTouchMap(touch, body)
     local touchPoint = vec2(touch.pos.x, touch.pos.y)
     local touchAnchor = body:getLocalPoint(touchPoint)
     local centerAnchor = vec2(0,0)
-    self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = centerAnchor, followers = {}}
+    self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = touchAnchor, followers = {}}
 end
 
 function PhysicsDebugDraw:addJoint(joint)
@@ -440,7 +440,7 @@ function PhysicsDebugDraw:draw()
         
     end
     
-    local shouldDraw = false
+    local shouldDraw = true
     if shouldDraw then
         pushStyle()
         smooth()
