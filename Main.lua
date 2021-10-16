@@ -1,6 +1,5 @@
 
 --saveImage("Project:Icon", readImage(asset.preview))
- 
 function testRootFunctions()
     CodeaUnit.detailed = true
     CodeaUnit.skip = true
@@ -281,15 +280,10 @@ function remove(targetTable, removeMe)
 end
 
 function tableHas(targetTable, lookForMe)
-    local validKeys = {}
     for _, element in pairs(targetTable) do
-        validKeys[element] = true
+        if element == lookForMe then return true end
     end
-    if validKeys[lookForMe] then
-        return true, lookForMe
-    else
-        return false
-    end
+    return false
 end
 
 function createCircle(x,y,r)

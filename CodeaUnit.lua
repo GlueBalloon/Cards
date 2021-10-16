@@ -63,6 +63,7 @@ end
 function CodeaUnit:expect(...)
     local args = {...}
     local message
+    --detecting #args will mess up if expected value is nil, because nil isn't counted as a value
     if #args == 1 then
         --if only one argument, it's the condition, and this report uses the overall test name
         conditional = args[1]
@@ -83,7 +84,7 @@ function CodeaUnit:expect(...)
         self.failures = self.failures + 1
         local actual = tostring(conditional)
         local expected = tostring(self.expected)
-        print(string.format("%s:\nExpected: %s\n-- FAIL: got %s", message, expected, actual))
+        print(string.format("%s:\nExpected: %s\n-- FAIL: found %s", message, expected, actual))
     end
     
     local notify = function(result)
@@ -95,7 +96,7 @@ function CodeaUnit:expect(...)
     end
     
     local is = function(expected)
-        self.expected = expected
+        self.expected = expected 
         notify(conditional == expected)
     end
     

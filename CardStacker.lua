@@ -64,7 +64,7 @@ function testCardStacker()
             _:expect(allSameStack and hashTableHasCardsInIt).is(true)
         end)
         
-        _:test("testsOfCardsAtMultipleLocations", function() 
+        _:test("tests Of Cards At Multiple Locations", function() 
             
             local distanceOffset = deck[1].width * 0.5
             local position1 = vec2(10, 10)
@@ -107,6 +107,29 @@ function testCardStacker()
                 end
             end
             _:expect("--b: all cards hash to correct stack", hashesAreRight).is(true)
+        end)
+        
+        _:test("forceStackFrom(cards) tests", function() 
+            local forceThis = {deck[13], deck[48], deck[2],  deck[26]}
+            stacker:forceStackWithThis(forceThis)
+            _:expect("--a: creates stack in stacks", stacker.stacks).has(forceThis)
+            _:expect("--b: stack has 'isForcedStack' key", forceThis.isForcedStack).is(true)
+            local hashesAreRight = true
+            for i, cardAsKey in ipairs(forceThis) do
+                if stacker.stacks[cardAsKey] ~= forceThis then
+                    hashesAreRight = false
+                end
+            end
+            _:expect("--c: cards in forced stack hash to forced stack", hashesAreRight).is(true)
+            local forceThisAlso = {deck[8], deck[2], deck[33]}
+            stacker:forceStackWithThis(forceThisAlso)
+            local forcedStacksTable = stacker:forcedStacks()
+            local hasBoth = tableHas(forcedStacksTable, forceThis) and tableHas(forcedStacksTable, forceThisAlso)
+            local rightSize = #forcedStacksTable == 2
+            _:expect("--d: forcedStacks returns table of right size with both stacks", hasBoth and rightSize).is(true)
+            stacker:refreshStacks()
+            local hasBoth = tableHas(stacker.stacks, forceThis) and tableHas(stacker.stacks, forceThisAlso)
+            _:expect("--e: refreshing stacks preserves forced stacks", hasBoth).is(true)
         end)
     end)
 end
@@ -154,7 +177,45 @@ function CardStacker:tablesOfCardsCloserThan(maxDistance, cards)
 end
 
 function CardStacker:refreshStacks()
+    --get forced, etc...
+    local forcedStacks = self:forcedStacks()
     self.stacks = self:tablesOfCardsCloserThan(self.radiusForStacking, self.cards)
+    for _, stack in ipairs(forcedStacks) do
+        self:forceStackWithThis(stack)
+    end
+    --[[
+    if i go through forced tables, i can use the cards to find their stacks
+    then i remove them, and if stack is now empty, remove it too
+    then make the cards hash to their forced stack
+    and insert the forced stacks in the stacks
+    ]]
+end
+
+function CardStacker:forcedStacks()
+    local forcedStacks = {}
+    for _, stack in ipairs(self.stacks) do
+        if stack.isForcedStack then 
+            table.insert(forcedStacks, stack)
+        end
+    end
+    return forcedStacks
+end
+
+function CardStacker:forceStackWithThis(tableOfCards)
+    tableOfCards.isForcedStack = true
+    table.insert(self.stacks, tableOfCards)
+    for _, card in ipairs(tableOfCards) do
+        self.stacks[card] = tableOfCards
+    end
+end
+
+function CardStacker:forceStackFromBodies(tableOfBodies)
+    local tableOfCards = {}
+    tableOfCards.isForcedStack = true
+    for _, body in ipairs(tableOfBodies) do
+        table.insert(tableOfCards, body.owner)
+    end
+    self:forceStackWithThis(tableOfCards)
 end
 
 function CardStacker:shuffle()
