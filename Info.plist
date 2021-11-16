@@ -8,6 +8,7 @@
 	<array>
 		<string>Main</string>
 		<string>PhysicsDebugDraw</string>
+		<string>TouchMapFunctions</string>
 		<string>CardTable</string>
 		<string>Card</string>
 		<string>CodeaUnit</string>

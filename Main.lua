@@ -100,6 +100,7 @@ end
 
 function setup()
     debugDraw = PhysicsDebugDraw()
+    table.insert(debugDraw.touchMapFunctions, wo)
     cardTable = CardTable()
     tests = {cardTable}
     setTest(1)

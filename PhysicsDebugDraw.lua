@@ -212,6 +212,7 @@ function PhysicsDebugDraw:init()
     self.touchMap = {}
     self.contacts = {}
     self.stacks = {}
+    self.touchMapFunctions = {}
     parameter.action("List DebugDraw bodies", function()
         local cardsString = ""
         for key, body in pairs(self.bodies) do
@@ -314,6 +315,7 @@ function PhysicsDebugDraw:draw()
         stroke(128,0,128) -- purple
     end
     
+    --[[
     --why is the physics part of this in draw()?
     --solve this by killing the touchMap if a touch reverses direction?
     for touchId, mappedTouch in pairs(self.touchMap) do
@@ -345,6 +347,11 @@ function PhysicsDebugDraw:draw()
             body:applyForce( (1/1) * diff * gain - vel * damp, body:getWorldPoint(vec2(0,0))) --shove the body
         end
         
+    end
+    ]]
+    
+    for _, func in pairs(self.touchMapFunctions) do
+        func(self.touchMap)
     end
     
     if shouldDraw then
