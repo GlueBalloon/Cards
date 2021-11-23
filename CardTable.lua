@@ -53,14 +53,16 @@ end
 
 function CardTable:init()
     physics.gravity(0,0)
-    self.bounds = self:createScreenBorders()
+    self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
+    self.badges = {}
     local deck = CardTable.makeDeck()
+   -- self.stacks = {CardStack()}
     for i, card in ipairs(deck) do
+        debugDraw:addBody(card.body)
         self:addCard(card)
     end    
-    self.stacker = CardStacker(self.cards)
     --[[
     for k,v in pairs (self.cardsWithBodiesAsKeys) do
         print(k.shortName)
@@ -134,16 +136,17 @@ function CardTable:createScreenBorders() --size is size of 3D box
     local allBounds = {boundsBottom,boundsRight,boundsTop,boundsLeft}
     for i=1, #allBounds do
         allBounds[i].type = STATIC
+        debugDraw:addBody(allBounds[i])
     end
-    return allBounds
+    return boundingBox
 end
 
 function CardTable:cleanup()
-    for key, body in pairs(physics.bodies) do
-        remove(physics.bodies, body)
+    for key, body in pairs(debugDraw.bodies) do
+        remove(debugDraw.bodies, body)
+        body:destroy()
         self.cards[key] = nil
     end
-    physics:destroy()
     --[[
     for i, stack in ipairs(self.stacks) do
         for i, card in ipairs(self.cards) do
@@ -155,7 +158,6 @@ function CardTable:cleanup()
 end
 
 function CardTable:draw()
-    self.stacker:refreshStacks()
     tint(255, 136)
     sprite(asset.felt, WIDTH/2,HEIGHT/2,WIDTH,HEIGHT)
     noTint()
@@ -163,21 +165,15 @@ function CardTable:draw()
         self.cards[i]:draw()
     end
 
-    for i,stack in ipairs(self.stacker.stacks) do
-        if #stack > 1 then
-            local bottomCard = stack[#stack]
-            local cardW, cardH = bottomCard.width, bottomCard.height
-            local pos = bottomCard.body.position
-            pos = pos + vec2(cardW * 0.5, cardH * 0.5)
-            pushStyle()
-            fill(255, 14, 0, 215)
-            ellipse(pos.x, pos.y, cardW * 0.25)
-            fill(255)
-            font("HelveticaNeue-Light")
-            fontSize(cardW * 0.15)
-            text(#stack, pos.x, pos.y)
-            popStyle()
-        end
+    for i,badge in ipairs(self.badges) do
+        pushStyle()
+        fill(255, 14, 0)
+        ellipse(badge.x, badge.y, badge.radius*2)
+        fill(255)
+        font("HelveticaNeue-Bold")
+        fontSize(badge.radius*1.15)
+        text(badge.count, badge.x, badge.y)
+        popStyle()
     end
 end
 
@@ -253,7 +249,7 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
             ]]
             local cardTouched = self.cardsWithBodiesAsKeys[firstBodyTouched]
             -- print("sending touch to card: "..firstBodyTouched.shortName)
-            if cardTouched then cardTouched:touched(touch) end
+            cardTouched:touched(touch)
         end
     end
     

@@ -8,12 +8,12 @@
 	<array>
 		<string>Main</string>
 		<string>PhysicsDebugDraw</string>
+		<string>TouchMapFunctions</string>
 		<string>CardTable</string>
 		<string>Card</string>
-		<string>CardStacker</string>
 		<string>CodeaUnit</string>
-		<string>DebugDrawTests</string>
-		<string>ShapeDrawer</string>
+		<string>CardStack</string>
+		<string>TestDebugDraw</string>
 	</array>
 	<key>Created</key>
 	<string>2011-11-19 03:21:31 +0000</string>

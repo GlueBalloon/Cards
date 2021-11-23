@@ -1,8 +1,10 @@
 
 --saveImage("Project:Icon", readImage(asset.preview))
+ --t
 function testRootFunctions()
-    CodeaUnit.detailed = true
-    CodeaUnit.skip = true
+    
+    CodeaUnit.detailed = false
+    CodeaUnit.skip = false
     -- local shouldWipeDebugDraw = false
     
     _:describe("Testing root functions", function()
@@ -93,110 +95,16 @@ function testRootFunctions()
             --print(testString)
             _:expect(result).is(true)
         end)
-        
-        _:test("separateArrayAndHashTablesIn(...) returns correct tables", function()
-            --create result flags
-            local totalResult, arrayCountRight, arrayResult, hashCountRight, hashResult
-            --make test table 
-            local tableForKey = {}
-            local testTable = {[1] = "one", [2] = "two", [4] = "four", [10] = "ten", 
-                ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3", [3.3] = "three point three"}
-            --make verification tables to check results against
-            local correctArray = {}
-            table.insert(correctArray, "one"); table.insert(correctArray, "two"); correctArray[4] = "four"; correctArray[10] = "ten"
-            local correctHash = {[3.3] = "three point three", ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3"}
-            --run the function
-            local returnedArray, returnedHash = separateArrayAndHashTablesIn(testTable)
-            --inspect counts
-            local arrayCounter = 0
-            for i, v in pairs(returnedArray) do
-                arrayCounter = arrayCounter + 1
-            end
-            arrayCountRight = arrayCounter == 4
-            local hashCounter = 0
-            for i, v in pairs(returnedHash) do
-                hashCounter = hashCounter + 1
-            end
-            hashCountRight = hashCounter == 4
-            --inspect contents
-            if arrayCountRight and hashCountRight then
-                arrayResult = true 
-                hashResult = true 
-                for k, v in pairs(correctArray) do
-                    if v ~= returnedArray[k] then arrayResult = false end
-                end
-                for k, v in pairs(correctHash) do
-                    if v ~= returnedHash[k] then hashResult = false end
-                end
-            end
-            function stringFrom(thisTable)
-                local returnString = ""
-                for k, v in pairs(thisTable) do
-                    returnString = returnString.."("..tostring(k).." : "
-                    returnString = returnString..tostring(v)..") "
-                end
-                return returnString
-            end
-            --debugging statements: change to "if false" to turn off
-            if true then
-                print("correctArray: "..stringFrom(correctArray))
-                print("returnedArray: "..stringFrom(returnedArray))
-                print("correctHash: "..stringFrom(correctHash))
-                print("returnedHash: "..stringFrom(returnedHash))
-                print("arrayCountRight: ", arrayCountRight)
-                print("arrayResult: ", arrayResult)
-                print("hashCountRight: ", hashCountRight)
-                print("hashResult: ", hashResult)
-            end
-            --overall result is AND combination of all results
-            totalResult = arrayCountRight and arrayResult and hashCountRight and hashResult
-            _:expect(totalResult).is(true)
-        end)
     end)
 end
 
 function setup()
     debugDraw = PhysicsDebugDraw()
-    cardTable = CardTable(debugDraw)
+    table.insert(debugDraw.touchMapFunctions, wo)
+    cardTable = CardTable()
     tests = {cardTable}
     setTest(1)
     defaultGravity = physics.gravity()
-    --[[
-    print("#debugDraw.bodies before testCircle: ", #debugDraw.bodies)
-    local testCircle = createCircle(300, 150, 10)
-    print("#debugDraw.bodies after testCircle created: ", #debugDraw.bodies)
-    local i, removeAtI = 1, nil
-    while removeAtI == nil do
-        if debugDraw.bodies[i] == testCircle then
-            removeAtI = i
-        end
-        i = i + 1 
-    end
-    print("removeAtI: ", removeAtI)
-    table.remove(debugDraw.bodies, removeAtI)
-    print("#debugDraw.bodies after testCircle removed: ", #debugDraw.bodies)
-    testCircle:destroy()
-    print("#debugDraw.bodies after testCircle destroyed: ", #debugDraw.bodies)
-    local dummy
-    local i = 1
-    while dummy == nil do
-        if debugDraw.bodies[i] == testCircle then
-            dummy = debugDraw.bodies[i]
-            break
-        end
-        i = i + 1
-        if i == 53 then break end
-    end
-    if dummy == testCircle then
-        print("Body still in table after destruction")
-    else
-        print("Body not in table after destruction")
-    end
-    
-    testCircle = nil
-    print("52: ", debugDraw.bodies[52])
-    print("53: ", debugDraw.bodies[53])
-    ]]
 end
 
 function setTest(t)
@@ -210,18 +118,6 @@ function setTest(t)
     currentTest:setup()
 end
 
-function separateArrayAndHashTablesIn(thisTable)
-    local arrayTable, hashTable = {}, {}
-    for k, v in pairs(thisTable) do
-        if type(k) == "number" and k == math.ceil(k) then
-            arrayTable[k] = v
-        else
-            hashTable[k] = v
-        end
-    end
-    return arrayTable, hashTable
-end
-    
 function isarray(tableT)   
     --has to be a table in the first place of course
     if type(tableT) ~= "table" then return false end  
@@ -280,10 +176,15 @@ function remove(targetTable, removeMe)
 end
 
 function tableHas(targetTable, lookForMe)
+    local validKeys = {}
     for _, element in pairs(targetTable) do
-        if element == lookForMe then return true end
+        validKeys[element] = true
     end
-    return false
+    if validKeys[lookForMe] then
+        return true, lookForMe
+    else
+        return false
+    end
 end
 
 function createCircle(x,y,r)
@@ -306,7 +207,7 @@ function createBox(x,y,w,h)
     box.y = y
     box.restitutions = 0.25
     box.sleepingAllowed = false
-    debugDraw:addBody(box)
+   --debugDraw:addBody(box)
     return box
 end
 
@@ -348,7 +249,6 @@ end
 
 -- This function gets called once every frame
 function draw()
-
     -- This sets the background color to black
     background(0, 0, 0)
 
@@ -357,6 +257,7 @@ function draw()
         setTest(TestNumber)
     end
       ]]
+
     cardTable:draw()
     debugDraw:draw()
 
@@ -405,118 +306,4 @@ function collide(contact)
     if currentTest and currentTest.collide then
         currentTest:collide(contact)
     end
-end
-
-function stringIfBody(possible)
-    local str = ""
-    if string.sub(tostring(possible), 1, 9) == "rigidbody" then
-        str = str.."body("
-        if possible.shortName then
-            str = str..possible.shortName
-        else
-            str = str.."unknown"
-        end
-        str = str..")"
-        return str
-    else
-        return possible
-    end
-end
-
-function tableToString(tTable, separator, preserveOrder)
-    if not separator then separator = "" end
-    local returnString = separator.."{   "..separator
-    local tableWithDescriptiveBodies, thisKey = {}, ""
-    --go through given table
-    for k, v in pairs(tTable) do
-        --make concatenatable string for value because it could be a table
-        local valueString = ""
-        --keep key in its original type if number or string
-        if type(k) ~= "string" and type(k) ~= "number" then
-            thisKey = stringIfBody(k)
-        else
-            thisKey = k
-        end
-        --if value is a table, recursively make a string from it
-        if type(v) == "table" then   
-            --remove the colon from tostring(v) because it's visually confusing with the colons used between tables and keys
-            valueString = valueString.."table#"..string.sub(tostring(v), 8)
-            --prevent endless loop if table contains reference to itself  
-            if(v==tTable) then           
-                valueString = valueString..": <-(self reference)"         
-            else            
-                valueString = valueString.." "..tableToString(v)       
-            end       
-        else --if not a table:
-            --format value string specially for functions
-            if type(v) == "function" then           
-                valueString = valueString..tostring(v).."()"        
-            else         
-                --create descrptive string from value   
-                valueString = valueString..tostring(stringIfBody(v))
-            end    
-        end
-        --store descriptive values either under number indexes or descriptive strings
-        tableWithDescriptiveBodies[thisKey] = valueString
-    end
-    --separate tables to store i,v pairs and k, v pairs as strings
-    local ivStrings, kvStrings = {}, {}
-    --first turn i,v pairs into strings, keeping them in order
-    for i = #tableWithDescriptiveBodies, 1, -1 do
-        table.insert(ivStrings, 1, "["..i.."]: "..tableWithDescriptiveBodies[i])
-        --remove used value
-        tableWithDescriptiveBodies[i] = nil
-    end
-    --now iterate through all keys left and make k,v strings
-    for k, v in pairs(tableWithDescriptiveBodies) do
-        table.insert(kvStrings, "["..tostring(k).."]: "..v)
-    end
-    if #ivStrings == 0 and #kvStrings == 0 then
-        return "{}"
-    end
-    if #ivStrings ~= 0 then
-        returnString = returnString.."///indexed/// "
-        for i, v in ipairs(ivStrings) do
-            returnString = returnString..v
-            if i ~= #ivStrings then
-                returnString = returnString..", "
-            else
-                returnString = returnString.."  "
-            end
-        end
-    end
-    if #kvStrings ~= 0 then
-        if #ivStrings ~= 0 then
-            returnString = returnString..separator
-        end
-        returnString = returnString.."///keys/// "
-        for i, v in ipairs(kvStrings) do
-            returnString = returnString..v        
-            if i ~= #ivStrings then
-                returnString = returnString..", "
-            else
-                returnString = returnString.."  "
-            end
-        end
-    end  
-    return returnString.."\t"..separator.."}"
-end
-
-parameter.boolean("breakpointsEnabled", false)
-
-breakpoint = function()
-    if not breakpointsEnabled then return end
-    print("tap tab to advance a line, type 'qq' to exit breakpoints")
-    local buffer = ""
-    showKeyboard()
-    while buffer ~= "\t" do
-        buffer = keyboardBuffer()
-        bufferLength = string.len(buffer)
-        buffer = string.sub(buffer, string.len(buffer)-1)
-        if buffer == "qq" then
-            buffer = "\t"
-            breakpointsEnabled = false
-        end
-    end
-    hideKeyboard()
 end

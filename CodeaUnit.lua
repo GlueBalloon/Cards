@@ -1,14 +1,13 @@
 --from an original by jakesankey
 
 CodeaUnit = class()
-CodeaUnit.isRunning = false
-CodeaUnit.doBeforeAndAfter = true
 
 function CodeaUnit:describe(feature, allTests)
     print(string.format("\t****\n\t%s\n\t****", feature))
     if self.skip == true then
         print("\t * Tests Skipped")
     else
+        self.isRunning = true
         self.tests = 0
         self.ignored = 0
         self.failures = 0
@@ -23,6 +22,7 @@ function CodeaUnit:describe(feature, allTests)
         local summary = string.format("\t\t\t----------\n\t\t\tPass: %d\n\t\t\tIgnore: %d\n\t\t\tFail: %d", passed, self.ignored, self.failures)
         
         print(summary)
+        self.isRunning = false
     end
 end
 
@@ -63,7 +63,6 @@ end
 function CodeaUnit:expect(...)
     local args = {...}
     local message
-    --detecting #args will mess up if expected value is nil, because nil isn't counted as a value
     if #args == 1 then
         --if only one argument, it's the condition, and this report uses the overall test name
         conditional = args[1]
@@ -84,7 +83,7 @@ function CodeaUnit:expect(...)
         self.failures = self.failures + 1
         local actual = tostring(conditional)
         local expected = tostring(self.expected)
-        print(string.format("%s:\nExpected: %s\n-- FAIL: found %s", message, expected, actual))
+        print(string.format("%s:\nExpected: %s\n-- FAIL: got %s", message, expected, actual))
     end
     
     local notify = function(result)
@@ -96,7 +95,7 @@ function CodeaUnit:expect(...)
     end
     
     local is = function(expected)
-        self.expected = expected 
+        self.expected = expected
         notify(conditional == expected)
     end
     
@@ -139,7 +138,6 @@ function CodeaUnit:expect(...)
 end
 
 CodeaUnit.execute = function()
-    CodeaUnit.isRunning = true
     for i,v in pairs(listProjectTabs()) do
         local source = readProjectTab(v)
         for match in string.gmatch(source, "function%s-(test.-%(%))") do
