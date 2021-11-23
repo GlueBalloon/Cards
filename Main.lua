@@ -158,7 +158,8 @@ end
 
 function setup()
     debugDraw = PhysicsDebugDraw()
-    cardTable = CardTable(debugDraw)
+    table.insert(debugDraw.touchMapFunctions, wo)
+    cardTable = CardTable()
     tests = {cardTable}
     setTest(1)
     defaultGravity = physics.gravity()
