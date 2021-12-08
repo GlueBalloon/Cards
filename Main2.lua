@@ -1,71 +1,16 @@
 
--- Addon Testbed
----[[
-
--- These stub functions will be replaced by their "real" counterparts in the exported xCode project
--- Addon functions are grouped via a table
-
-local cb = nil
-
-myFirstAddon = {
-    extGetValue                = function()    return "INTERNAL" end,
-    extSendOneParamToDouble    = function(a)   return a end,
-    extSendTwoParamsToMultiply = function(a,b) return a+b end,
-    extSetCountBase            = function(c)   print("setCountBase "..c); cb = 9999 end,
-    extIncCount                = function ()   cb = cb-1 end,
-    extGetCount                = function ()   return cb end,
-}
---]]
-
-viewer.mode = OVERLAY
-
--- Use this function to perform your initial setup
-function setup()
-    print("AddonTestbed")
-    print("getExtValue = "..myFirstAddon.extGetValue())
-    print("Internal 2 doubled = "..2*2)
-    print("sendOneParamToDouble(2) = "..myFirstAddon.extSendOneParamToDouble(2))
-    print("sendTwoParamsToMultiply(3,4) = "..myFirstAddon.extSendTwoParamsToMultiply(3,4))
-    print("setCountBase(0)")
-    myFirstAddon.extSetCountBase(0)
-    print("getCount = "..myFirstAddon.extGetCount())
-
-    parameter.action("showIt", function()
-        showDumbEllipse = not showDumbEllipse 
-    end)
-end
-
--- This function gets called once every frame
-function draw()
-    -- This sets a dark background color 
-    background(40, 40, 50)
-    
-    -- This sets the line thickness
-    strokeWidth(5)
-    
-    -- Do your drawing here
-    textMode(CORNER)
-    fontSize(20)
-    text("extGetCount = "..myFirstAddon.extGetCount(),40,400)
-    myFirstAddon.extIncCount()
-    
-
-    if showDumbEllipse then
-        ellipse(WIDTH/2, HEIGHT/2, WIDTH/3)
-    end
-end
-
-
---[[
 
 
 function setup()
-    --globals global to rule them all
+    --one globals global to rule them all
     G = {}
     G.physics = PhysicsLab()
     debugDraw = PhysicsDebugDraw()
-    table.insert(debugDraw.touchMapFunctions, jankyTouch)
+    table.insert(debugDraw.touchMapFunctions, bestTouch)
     cardTable = CardTable()
+    for i=1, #cardTable.bounds do
+        debugDraw:addBody(cardTable.bounds[i])
+    end
     tests = {cardTable}
     setTest(1)
     defaultGravity = physics.gravity()
@@ -104,7 +49,7 @@ function setup()
     testCircle = nil
     print("52: ", debugDraw.bodies[52])
     print("53: ", debugDraw.bodies[53])
-    ] ]
+    ]]
 end
 
 function setTest(t)
@@ -269,7 +214,7 @@ function draw()
     if TestNumber ~= currentTestIndex then
         setTest(TestNumber)
     end
-      ] ]
+      ]]
     cardTable:draw()
     debugDraw:draw()
 
@@ -283,7 +228,7 @@ function draw()
 
     text(str, WIDTH/2, HEIGHT - layout.safeArea.top - 18)
     textWrapWidth(WIDTH-20)
-      ] ]
+      ]]
     
     if UseAccelerometer == true then
         physics.gravity(Gravity)
@@ -433,4 +378,3 @@ breakpoint = function()
     end
     hideKeyboard()
 end
-]]

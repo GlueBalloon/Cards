@@ -53,13 +53,14 @@ end
 
 function CardTable:init()
     physics.gravity(0,0)
-    self:createScreenBorders()
+    self.bounds = self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
     local deck = CardTable.makeDeck()
     for i, card in ipairs(deck) do
        -- physics:addBody(card.body)
         self:addCard(card)
+        card.body.position = vec2(WIDTH/2, HEIGHT/2)
     end    
     self.stacker = CardStacker(self.cards)
     --[[
@@ -137,7 +138,7 @@ function CardTable:createScreenBorders() --size is size of 3D box
         allBounds[i].type = STATIC
         --physics:addBody(allBounds[i])
     end
-    return boundingBox
+    return allBounds
 end
 
 function CardTable:cleanup()

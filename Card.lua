@@ -155,7 +155,7 @@ function Card:touched(touch)
     self.lastTouch = touch
     local touchPoint = vec2(touch.pos.x, touch.pos.y)
     local selfTapped = self.body:testPoint(touchPoint)
-    if selfTapped and touch.tapCount == 1 and touch.state == ENDED then
+    if selfTapped and touch.tapCount == 2 and touch.state == ENDED then
         --print("you ended a tap on me, "..self.body.shortName)
       --  print("touchPoint: "..touchPoint.x.." "..touchPoint.y)
         if self.showing == self.back then
