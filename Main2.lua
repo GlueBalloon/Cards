@@ -6,7 +6,7 @@ function setup()
     G = {}
     G.physics = PhysicsLab()
     debugDraw = PhysicsDebugDraw()
-    table.insert(debugDraw.touchMapFunctions, bestTouch)
+    table.insert(debugDraw.touchMapFunctions, testTouch)
     cardTable = CardTable()
     for i=1, #cardTable.bounds do
         debugDraw:addBody(cardTable.bounds[i])
