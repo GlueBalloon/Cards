@@ -6,8 +6,10 @@ function setup()
     G = {}
     G.physics = PhysicsLab()
     debugDraw = PhysicsDebugDraw()
-    table.insert(debugDraw.touchMapFunctions, testTouch)
+    table.insert(debugDraw.touchMapFunctions, bestTouch)
+    table.insert(debugDraw.touchMapFunctions, testForPickupMode)
     cardTable = CardTable()
+    G.cardTable = cardTable
     for i=1, #cardTable.bounds do
         debugDraw:addBody(cardTable.bounds[i])
     end

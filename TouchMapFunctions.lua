@@ -1,4 +1,4 @@
-function testTouch(touchMap)   
+function bestTouch(touchMap)   
     --why is the physics part of this in draw()?
     --solve this by killing the touchMap if a touch reverses direction?
     for touchId, mappedTouch in pairs(touchMap) do
@@ -45,7 +45,6 @@ function testTouch(touchMap)
                 vel=math.min(50,math.max(-50,vel))
                 body.angularVelocity=vel*6
             elseif not body.keepSkew then
-                print("keepskew")
                 body.keepSkew = angleDiff % 180
                 body.angularVelocity=0
             else
@@ -86,7 +85,16 @@ function testTouch(touchMap)
     end
 end
     
-function bestTouch(touchMap)
+function testForPickupMode(touchMap)
+    for touchId, mappedTouch in pairs(touchMap) do
+        if (mappedTouch.tp == mappedTouch.startPoint) and 
+            (ElapsedTime - mappedTouch.startTime > 0.5) then
+            mappedTouch.body.isPickerUpper = true
+        end
+    end
+end
+
+function pastBestTouch(touchMap)
     --why is the physics part of this in draw()?
     --solve this by killing the touchMap if a touch reverses direction?
     for touchId, mappedTouch in pairs(touchMap) do

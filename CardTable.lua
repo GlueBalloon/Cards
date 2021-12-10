@@ -1,7 +1,7 @@
 function testCardTable()
     
     CodeaUnit.detailed = false
-    CodeaUnit.skip = true
+    CodeaUnit.skip = false
     
     _:describe("Testing Card Table", function()
         
@@ -37,6 +37,25 @@ function testCardTable()
             end
             local rightTotals = spades == 13 and hearts == 13 and diamonds == 13 and clubs == 13
             _:expect(rightTotals).is(true)
+        end)
+        
+        
+        _:test("detects swipe across stacks", function()
+            local randX = math.random(math.floor(WIDTH*0.1), math.floor(WIDTH*0.9))
+            local randY = math.random(math.floor(HEIGHT*0.1), math.floor(HEIGHT*0.9))
+            local topCard
+            for _, card in ipairs(G.cardTable.cards) do
+                if math.random(7) <= 2 then
+                    topCard = card
+                    card.body.position = vec2(randX, randY)
+                end
+            end
+            local swipeDist = G.cardTable.cards[1].width * 2
+            local fakeBeginTouch = fakeTouch(randX - swipeDist, randY, BEGAN, 1, 4373)
+            local fakeMovingTouch = fakeTouch(randX + swipeDist, randY, MOVING, 1, 4373, fakeBeginTouch.pos)
+            G.cardTable:touched(fakeBeginTouch)
+            G.cardTable:touched(fakeBeginTouch)
+            _:expect(false).is(true)
         end)
         
     end)
@@ -174,11 +193,11 @@ function CardTable:draw()
             pos = pos + vec2(cardW * 0.5, cardH * 0.5)
             pushStyle()
             fill(255, 14, 0, 215)
-            ellipse(pos.x, pos.y, cardW * 0.25)
+            ellipse(pos.x, pos.y, cardW * 0.33)
             fill(255)
-            font("HelveticaNeue-Light")
-            fontSize(cardW * 0.15)
-            text(#stack, pos.x, pos.y)
+            font("HelveticaNeue")
+            fontSize(cardW * 0.2)
+            text(#stack, pos.x * 1.001, pos.y * 1.002)
             popStyle()
         end
     end

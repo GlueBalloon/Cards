@@ -61,10 +61,15 @@ function PhysicsDebugDraw:hasBody(verifyMe)
 end
 
 function PhysicsDebugDraw:addTouchToTouchMap(touch, body)
-    local touchPoint = vec2(touch.pos.x, touch.pos.y)
-    local touchAnchor = body:getLocalPoint(touchPoint)
-    local centerAnchor = vec2(0,0)
-    self.touchMap[touch.id] = {tp = touchPoint, body = body, anchor = touchAnchor, followers = {}}
+    local touchAnchor = body:getLocalPoint(touch.pos)
+    self.touchMap[touch.id] = {
+        tp = touch.pos,
+        body = body,
+        anchor = touchAnchor, 
+        startPoint = touch.pos,
+        startTime = ElapsedTime,
+        followers = {}
+    }
 end
 
 function PhysicsDebugDraw:addJoint(joint)
@@ -130,7 +135,7 @@ function PhysicsDebugDraw:draw()
         
     end
     
-    local shouldDraw = true
+    local shouldDraw = false
     if shouldDraw then
         pushStyle()
         smooth()
@@ -294,6 +299,7 @@ function PhysicsDebugDraw:touched(touch)
         shouldReport = true
         --  print("moving touchmap: "..self.touchMap[touch.id].body.shortName)
         self.touchMap[touch.id].tp = touchPoint
+        if not self.touchMap[touch.id].body.isPickerUpper then goto endOfStacking end
         for _,body in ipairs(self.bodies) do
             if body.owningClass == "card" then
                 --print("moving, ",body.shortName, body.owningClass)
@@ -318,6 +324,7 @@ function PhysicsDebugDraw:touched(touch)
                 end
             end
         end
+        ::endOfStacking::
         shouldReport = false
         returnValue = true
         --delete any touchMap for an end touch
@@ -367,6 +374,7 @@ function PhysicsDebugDraw:clearTouchMap(touch)
         body.angularVelocity = self.touchMap[touch.id].body.angularVelocity
         body.linearVelocity = self.touchMap[touch.id].body.linearVelocity
     end
+    self.touchMap[touch.id].body.isPickerUpper = nil
     self.touchMap[touch.id] = nil
 end
 

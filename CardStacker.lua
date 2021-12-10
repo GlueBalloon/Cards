@@ -1,6 +1,6 @@
 function testCardStacker()
     
-    CodeaUnit.detailed = true
+    CodeaUnit.detailed = false
     CodeaUnit.skip = false
     
     _:describe("Testing Stacker", function()
@@ -116,7 +116,7 @@ CardStacker = class()
 function CardStacker:init(cards)
     self.stacks = {}
     self.cards = cards
-    self.radiusForStacking = self.cards[1].width * 0.05
+    self.radiusForStacking = self.cards[1].width * 0.3
     self:refreshStacks()
 end
 
