@@ -125,7 +125,7 @@ function Card:init(rank, suit)
     self.face = asset[self:shortName()..".png"]
     self.showing = self.back,mk
     self.lastTouch = {}
-    local borderSize = self.width / 15
+    local borderSize = self.width / 12
     self.borderScale = vec2(self.width + borderSize, self.height + borderSize)
 end
 
@@ -146,7 +146,7 @@ end
 function Card:drawPickerUpperBorder()
     pushStyle()
     pushMatrix()
-    tint(202, 236, 67)
+    tint(239, 216, 55)
    -- scale(self.borderScale.x, self.borderScale.y)
     sprite(self.showing,0,0,self.borderScale.x, self.borderScale.y)
     popMatrix()
