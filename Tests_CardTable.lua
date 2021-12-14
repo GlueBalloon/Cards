@@ -1,4 +1,4 @@
---[[function testCardTable()
+function testCardTable()
     
     CodeaUnit.detailed = false
     CodeaUnit.skip = false
@@ -59,4 +59,4 @@
         end)
         
     end)
-end]]
+end

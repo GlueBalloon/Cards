@@ -1,4 +1,4 @@
---[[function testCard()
+function testCard()
     
     CodeaUnit.detailed = false
     CodeaUnit.skip = true
@@ -91,4 +91,4 @@
             _:expect(tostring(card.showing) == tostring(card.face)).is(true)
         end)       
     end)
-end]]
+end

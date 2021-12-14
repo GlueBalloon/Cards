@@ -12,15 +12,15 @@
 		<string>Card</string>
 		<string>CardStacker</string>
 		<string>CodeaGCHandler</string>
+		<string>Tests_GameCenter</string>
 		<string>Main</string>
 		<string>Main2</string>
 		<string>CodeaUnit</string>
-		<string>Tests_GameCenter</string>
 		<string>Tests_DebugDraw</string>
 		<string>Tests_Main</string>
 		<string>Tests_CardTable</string>
-		<string>Tests_Card</string>
 		<string>Tests_CardStacker</string>
+		<string>Tests_Card</string>
 	</array>
 	<key>Created</key>
 	<string>2011-11-19 03:21:31 +0000</string>

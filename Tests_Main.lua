@@ -1,4 +1,4 @@
---[[function testRootFunctions()
+function testRootFunctions()
     CodeaUnit.detailed = true
     CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
@@ -47,105 +47,105 @@
                     result = false
                 end
             end
-
-    if #testTable ~= #correctResult then result = false end
-    _:expect(result == true and #testTable ~= 0).is(true)
-end)
-
-_:test("remove(...) deletes last string value in hash when it matches target value", function()
-    local testTable = {a = "this ", g = "sentence", b = "is ", l = "right ", v = "not"}
-    local correctResult = {a = "this ", g = "sentence", b = "is ", l = "right "}
-    testTable = remove(testTable, "not")
-    local result = true
-    for k,v in pairs(testTable) do
-        if testTable[k] == valueToZap then
-            result = false
-            break
-        end
-    end          
-    _:expect(result).is(true)
-end)
-
-_:test("remove(...) deletes right value element from table", function()
-    local testTable = {1, 2, a = "this", m = " sentence", ["the word is"] = " is", " not",  " right"}
-    local correctResult = {1, 2, a = "this", m = " sentence", ["the word is"] = " is",  " right"}
-    local valueToZap = " not"
-    testTable = remove(testTable, " not")
-    local result = true
-    local testString = "testTable string:\n"
-    for k,v in pairs(testTable) do
-        testString = testString.."["..tostring(k).."]:"..tostring(v).." "
-        if testTable[k] == valueToZap then
-            result = false
-            break
-        end
-    end
-    --print(testString)
-    testString = "correctResult string:\n"
-    for k,v in pairs(correctResult) do
-        testString = testString.."["..tostring(k).."]:"..tostring(v).." "
-    end
-    --print(testString)
-    _:expect(result).is(true)
-end)
-
-_:test("separateArrayAndHashTablesIn(...) returns correct tables", function()
-    --create result flags
-    local totalResult, arrayCountRight, arrayResult, hashCountRight, hashResult
-    --make test table 
-    local tableForKey = {}
-    local testTable = {[1] = "one", [2] = "two", [4] = "four", [10] = "ten", 
-        ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3", [3.3] = "three point three"}
-    --make verification tables to check results against
-    local correctArray = {}
-    table.insert(correctArray, "one"); table.insert(correctArray, "two"); correctArray[4] = "four"; correctArray[10] = "ten"
-    local correctHash = {[3.3] = "three point three", ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3"}
-    --run the function
-    local returnedArray, returnedHash = separateArrayAndHashTablesIn(testTable)
-    --inspect counts
-    local arrayCounter = 0
-    for i, v in pairs(returnedArray) do
-        arrayCounter = arrayCounter + 1
-    end
-    arrayCountRight = arrayCounter == 4
-    local hashCounter = 0
-    for i, v in pairs(returnedHash) do
-        hashCounter = hashCounter + 1
-    end
-    hashCountRight = hashCounter == 4
-    --inspect contents
-    if arrayCountRight and hashCountRight then
-        arrayResult = true 
-        hashResult = true 
-        for k, v in pairs(correctArray) do
-            if v ~= returnedArray[k] then arrayResult = false end
-        end
-        for k, v in pairs(correctHash) do
-            if v ~= returnedHash[k] then hashResult = false end
-        end
-    end
-    function stringFrom(thisTable)
-        local returnString = ""
-        for k, v in pairs(thisTable) do
-            returnString = returnString.."("..tostring(k).." : "
-            returnString = returnString..tostring(v)..") "
-        end
-        return returnString
-    end
-    --debugging statements: change to "if false" to turn off
-    if true then
-        print("correctArray: "..stringFrom(correctArray))
-        print("returnedArray: "..stringFrom(returnedArray))
-        print("correctHash: "..stringFrom(correctHash))
-        print("returnedHash: "..stringFrom(returnedHash))
-        print("arrayCountRight: ", arrayCountRight)
-        print("arrayResult: ", arrayResult)
-        print("hashCountRight: ", hashCountRight)
-        print("hashResult: ", hashResult)
-    end
-    --overall result is AND combination of all results
-    totalResult = arrayCountRight and arrayResult and hashCountRight and hashResult
-    _:expect(totalResult).is(true)
-end)
-end)
-end]]
+            
+            if #testTable ~= #correctResult then result = false end
+            _:expect(result == true and #testTable ~= 0).is(true)
+        end)
+        
+        _:test("remove(...) deletes last string value in hash when it matches target value", function()
+            local testTable = {a = "this ", g = "sentence", b = "is ", l = "right ", v = "not"}
+            local correctResult = {a = "this ", g = "sentence", b = "is ", l = "right "}
+            testTable = remove(testTable, "not")
+            local result = true
+            for k,v in pairs(testTable) do
+                if testTable[k] == valueToZap then
+                    result = false
+                    break
+                end
+            end          
+            _:expect(result).is(true)
+        end)
+        
+        _:test("remove(...) deletes right value element from table", function()
+            local testTable = {1, 2, a = "this", m = " sentence", ["the word is"] = " is", " not",  " right"}
+            local correctResult = {1, 2, a = "this", m = " sentence", ["the word is"] = " is",  " right"}
+            local valueToZap = " not"
+            testTable = remove(testTable, " not")
+            local result = true
+            local testString = "testTable string:\n"
+            for k,v in pairs(testTable) do
+                testString = testString.."["..tostring(k).."]:"..tostring(v).." "
+                if testTable[k] == valueToZap then
+                    result = false
+                    break
+                end
+            end
+            --print(testString)
+            testString = "correctResult string:\n"
+            for k,v in pairs(correctResult) do
+                testString = testString.."["..tostring(k).."]:"..tostring(v).." "
+            end
+            --print(testString)
+            _:expect(result).is(true)
+        end)
+        
+        _:test("separateArrayAndHashTablesIn(...) returns correct tables", function()
+            --create result flags
+            local totalResult, arrayCountRight, arrayResult, hashCountRight, hashResult
+            --make test table 
+            local tableForKey = {}
+            local testTable = {[1] = "one", [2] = "two", [4] = "four", [10] = "ten", 
+                ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3", [3.3] = "three point three"}
+            --make verification tables to check results against
+            local correctArray = {}
+            table.insert(correctArray, "one"); table.insert(correctArray, "two"); correctArray[4] = "four"; correctArray[10] = "ten"
+            local correctHash = {[3.3] = "three point three", ["red"] = "foo1", ["five"] = "foo2", [tableForKey] = "foo3"}
+            --run the function
+            local returnedArray, returnedHash = separateArrayAndHashTablesIn(testTable)
+            --inspect counts
+            local arrayCounter = 0
+            for i, v in pairs(returnedArray) do
+                arrayCounter = arrayCounter + 1
+            end
+            arrayCountRight = arrayCounter == 4
+            local hashCounter = 0
+            for i, v in pairs(returnedHash) do
+                hashCounter = hashCounter + 1
+            end
+            hashCountRight = hashCounter == 4
+            --inspect contents
+            if arrayCountRight and hashCountRight then
+                arrayResult = true 
+                hashResult = true 
+                for k, v in pairs(correctArray) do
+                    if v ~= returnedArray[k] then arrayResult = false end
+                end
+                for k, v in pairs(correctHash) do
+                    if v ~= returnedHash[k] then hashResult = false end
+                end
+            end
+            function stringFrom(thisTable)
+                local returnString = ""
+                for k, v in pairs(thisTable) do
+                    returnString = returnString.."("..tostring(k).." : "
+                    returnString = returnString..tostring(v)..") "
+                end
+                return returnString
+            end
+            --debugging statements: change to "if false" to turn off
+            if true then
+                print("correctArray: "..stringFrom(correctArray))
+                print("returnedArray: "..stringFrom(returnedArray))
+                print("correctHash: "..stringFrom(correctHash))
+                print("returnedHash: "..stringFrom(returnedHash))
+                print("arrayCountRight: ", arrayCountRight)
+                print("arrayResult: ", arrayResult)
+                print("hashCountRight: ", hashCountRight)
+                print("hashResult: ", hashResult)
+            end
+            --overall result is AND combination of all results
+            totalResult = arrayCountRight and arrayResult and hashCountRight and hashResult
+            _:expect(totalResult).is(true)
+        end)
+    end)
+end

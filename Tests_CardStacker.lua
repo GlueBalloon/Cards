@@ -1,4 +1,4 @@
---[[function testCardStacker()
+function testCardStacker()
     
     CodeaUnit.detailed = false
     CodeaUnit.skip = false
@@ -110,4 +110,3 @@
         end)
     end)
 end
-]]

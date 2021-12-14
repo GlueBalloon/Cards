@@ -1,4 +1,4 @@
---[[function testPhysicsDebug()
+function testPhysicsDebug()
     
     CodeaUnit.detailed = true
     CodeaUnit.skip = true
@@ -158,148 +158,148 @@
             then
                 print(cardTable.stacks[1][1].shortName.." "..tostring(cardTable.stacks[1][1].position))
                 --local pos = stack[1].position
-
-        local s = debug.getinfo(2).short_src
-        print(s .. ":" .. line)
-        print("------")
-        breakpoint()
-    end
+                
+                local s = debug.getinfo(2).short_src
+                print(s .. ":" .. line)
+                print("------")
+                breakpoint()
+            end
+        end
+        
+        _:test("a card DOES become a follower if the touch started outside its bounds", function()
+            --    CodeaUnit.doBeforeAndAfter = false
+            card.body.x, card.body.y = 1500, 1500
+            card2.body.x, card2.body.y = 20, 20
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            debugDraw:touched(fakeBeginTouch)
+            bugTest = true
+            
+            -- debug.sethook(traceCard2body, "l")
+            --phony comment
+            shouldReport = false
+            function fake()               
+            end
+            shouldReport = true
+            fake()
+            shouldReport = false
+            debugDraw:touched(fakeMovingTouch)
+            _:expect("--a: one follower if touch started outside card2 then went in", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
+            _:expect("--b: card2 is the follower", debugDraw.touchMap[fakeBeginTouch.id].followers).has(card2.body)
+            CodeaUnit.doBeforeAndAfter = true
+        end)
+        
+        _:test("touch table is cleared from touchMap when touch ends", function()
+            --  if true then return end
+            CodeaUnit.doBeforeAndAfter = false
+            card.body.x, card.body.y = WIDTH, HEIGHT
+            card2.body.x, card2.body.y = 0, 0
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
+            debugDraw:touched(fakeBeginTouch)
+            
+            debugDraw:touched(fakeMovingTouch)
+            debugDraw:touched(fakeEndTouch)
+            local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
+            _:expect(touchMapIsNil).is(true)
+            CodeaUnit.doBeforeAndAfter = true
+        end)
+        
+        _:test("touchMap is cleared when touch is cancelled", function()
+            --         if true then return end
+            CodeaUnit.doBeforeAndAfter = false
+            card.body.x, card.body.y = WIDTH, HEIGHT
+            card2.body.x, card2.body.y = 0, 0
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
+            fakeEndTouch.state = CANCELLED
+            debugDraw:touched(fakeBeginTouch)
+            _:expect("--a: touchMap after BEGAN has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
+            _:expect("--b: touchMap after BEGAN has no followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
+            debugDraw:touched(fakeMovingTouch)
+            _:expect("--c: touchMap still right body after MOVING", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
+            _:expect("--d: after MOVING has one follower", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
+            debugDraw:touched(fakeEndTouch)
+            local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
+            _:expect("--e: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
+            CodeaUnit.doBeforeAndAfter = false
+        end)
+        
+        _:test("stack creation", function()
+            --         if true then return end
+            CodeaUnit.doBeforeAndAfter = false
+            local cardDistanceMin = card.height * 1.1
+            card.body.x, card.body.y = 1500, 1500
+            print(card.body.x, card.body.y)
+            card2.body.x, card2.body.y = card.body.x - cardDistanceMin, card.body.y - cardDistanceMin
+            card3.body.x, card3.body.y = card2.body.x - cardDistanceMin, card2.body.y - cardDistanceMin
+            fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
+            fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
+            fakeTouchRightNextToFirstMovingTouch = fakeTouch(card2.body.x + 1, card2.body.y, MOVING, 1, 4373, fakeMovingTouch.pos)
+            --redefine further touch to include tiny movement above
+            fakeFurtherMovingTouch = fakeTouch(card3.body.x, card3.body.y, MOVING, 1, 4373, fakeTouchRightNextToFirstMovingTouch.pos)
+            local rightNumStacks = #cardTable.stacks
+            debugDraw:touched(fakeBeginTouch)
+            _:expect("--a: after touch moves through one body, no stack is made", #cardTable.stacks).is(rightNumStacks)
+            debugDraw:touched(fakeMovingTouch)
+            rightNumStacks = rightNumStacks + 1
+            _:expect("--b: after touch moves through two bodies, stack is made", #cardTable.stacks).is(rightNumStacks)
+            local stackWithRightBody
+            for i, stack in ipairs(debugDraw.stacks) do
+                if stack[1] == card.body then
+                    stackWithRightBody = stack
+                    break
+                end
+            end
+            _:expect("--c: stack exists with right first body", stackWithRightBody ~= nil).is(true)
+            _:expect("--d: stack is keyed to by first body", debugDraw.stacks[card.body]).is(stackWithRightBody)
+            _:expect("--e: same stack contains second body", stackWithRightBody).has(card2.body)
+            local cardTableHasTable = cardTable.stacks == debugDraw.stacks
+            _:expect("--f: cardTable has same stack table", cardTableHasTable).is(true)
+            debugDraw:touched(fakeTouchRightNextToFirstMovingTouch)
+            _:expect("--g: card touched twice is not added twice", 2).is(#stackWithRightBody)
+            debugDraw:touched(fakeFurtherMovingTouch)
+            _:expect("--h: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
+            _:expect("--i: third card touched is also added", stackWithRightBody).has(card3.body)
+            
+            local notInStack = true
+            for _, stack in ipairs(debugDraw.stacks) do
+                if stack[1] == card.body then
+                    notInStack = false
+                end
+            end
+            
+            --have to end touch to test moving the top card off a stack. So that should go in a separate test function.
+            
+            _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
+            --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
+            --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
+            --  a touch map counts stacked cards and creates a badge
+            -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
+            CodeaUnit.doBeforeAndAfter = false
+        end)
+        
+        _:test("stack separation", function()
+            --gotta make a stack artificslly here
+            _:expect(stackIdGone and notInStack).is(true)
+        end)
+        
+        _:test("removeBody reduces body count", function()
+            local originalCount = #debugDraw.bodies
+            local testCircle = createCircle(300, 150, 10)
+            debugDraw:removeBody(testCircle)
+            --gotta make a stack artificslly here
+            _:expect(#debugDraw.bodies).is(originalCount)
+        end)
+        
+        _:test("removeAndDestroyThoughYouStillGottaNilManually destroys body", function() 
+            local countBeforeCircle = #debugDraw.bodies
+            local testCircle = createCircle(300, 150, 10)
+            debugDraw:removeAndDestroyThoughYouStillGottaNilManually(testCircle)
+            testCircle = nil
+            _:expect(testCircle == nil).is(true)
+        end)
+    end)
 end
-
-_:test("a card DOES become a follower if the touch started outside its bounds", function()
-    --    CodeaUnit.doBeforeAndAfter = false
-    card.body.x, card.body.y = 1500, 1500
-    card2.body.x, card2.body.y = 20, 20
-    fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
-    fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-    debugDraw:touched(fakeBeginTouch)
-    bugTest = true
-    
-    -- debug.sethook(traceCard2body, "l")
-    --phony comment
-    shouldReport = false
-    function fake()               
-    end
-    shouldReport = true
-    fake()
-    shouldReport = false
-    debugDraw:touched(fakeMovingTouch)
-    _:expect("--a: one follower if touch started outside card2 then went in", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
-    _:expect("--b: card2 is the follower", debugDraw.touchMap[fakeBeginTouch.id].followers).has(card2.body)
-    CodeaUnit.doBeforeAndAfter = true
-end)
-
-_:test("touch table is cleared from touchMap when touch ends", function()
-    --  if true then return end
-    CodeaUnit.doBeforeAndAfter = false
-    card.body.x, card.body.y = WIDTH, HEIGHT
-    card2.body.x, card2.body.y = 0, 0
-    fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
-    fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-    fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
-    debugDraw:touched(fakeBeginTouch)
-    
-    debugDraw:touched(fakeMovingTouch)
-    debugDraw:touched(fakeEndTouch)
-    local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
-    _:expect(touchMapIsNil).is(true)
-    CodeaUnit.doBeforeAndAfter = true
-end)
-
-_:test("touchMap is cleared when touch is cancelled", function()
-    --         if true then return end
-    CodeaUnit.doBeforeAndAfter = false
-    card.body.x, card.body.y = WIDTH, HEIGHT
-    card2.body.x, card2.body.y = 0, 0
-    fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
-    fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-    fakeEndTouch.pos.x, fakeEndTouch.pos.y = card.body.x/2, card.body.y/2
-    fakeEndTouch.state = CANCELLED
-    debugDraw:touched(fakeBeginTouch)
-    _:expect("--a: touchMap after BEGAN has the right body", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
-    _:expect("--b: touchMap after BEGAN has no followers", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(0)
-    debugDraw:touched(fakeMovingTouch)
-    _:expect("--c: touchMap still right body after MOVING", debugDraw.touchMap[fakeBeginTouch.id].body).is(card.body)
-    _:expect("--d: after MOVING has one follower", #debugDraw.touchMap[fakeBeginTouch.id].followers).is(1)
-    debugDraw:touched(fakeEndTouch)
-    local touchMapIsNil = debugDraw.touchMap[fakeBeginTouch.id] == nil
-    _:expect("--e: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
-    CodeaUnit.doBeforeAndAfter = false
-end)
-
-_:test("stack creation", function()
-    --         if true then return end
-    CodeaUnit.doBeforeAndAfter = false
-    local cardDistanceMin = card.height * 1.1
-    card.body.x, card.body.y = 1500, 1500
-    print(card.body.x, card.body.y)
-    card2.body.x, card2.body.y = card.body.x - cardDistanceMin, card.body.y - cardDistanceMin
-    card3.body.x, card3.body.y = card2.body.x - cardDistanceMin, card2.body.y - cardDistanceMin
-    fakeBeginTouch.pos.x, fakeBeginTouch.pos.y = card.body.x+(card.width*0.25), card.body.y+(card.height*0.25)
-    fakeMovingTouch.pos.x, fakeMovingTouch.pos.y = card2.body.x, card2.body.y
-    fakeTouchRightNextToFirstMovingTouch = fakeTouch(card2.body.x + 1, card2.body.y, MOVING, 1, 4373, fakeMovingTouch.pos)
-    --redefine further touch to include tiny movement above
-    fakeFurtherMovingTouch = fakeTouch(card3.body.x, card3.body.y, MOVING, 1, 4373, fakeTouchRightNextToFirstMovingTouch.pos)
-    local rightNumStacks = #cardTable.stacks
-    debugDraw:touched(fakeBeginTouch)
-    _:expect("--a: after touch moves through one body, no stack is made", #cardTable.stacks).is(rightNumStacks)
-    debugDraw:touched(fakeMovingTouch)
-    rightNumStacks = rightNumStacks + 1
-    _:expect("--b: after touch moves through two bodies, stack is made", #cardTable.stacks).is(rightNumStacks)
-    local stackWithRightBody
-    for i, stack in ipairs(debugDraw.stacks) do
-        if stack[1] == card.body then
-            stackWithRightBody = stack
-            break
-        end
-    end
-    _:expect("--c: stack exists with right first body", stackWithRightBody ~= nil).is(true)
-    _:expect("--d: stack is keyed to by first body", debugDraw.stacks[card.body]).is(stackWithRightBody)
-    _:expect("--e: same stack contains second body", stackWithRightBody).has(card2.body)
-    local cardTableHasTable = cardTable.stacks == debugDraw.stacks
-    _:expect("--f: cardTable has same stack table", cardTableHasTable).is(true)
-    debugDraw:touched(fakeTouchRightNextToFirstMovingTouch)
-    _:expect("--g: card touched twice is not added twice", 2).is(#stackWithRightBody)
-    debugDraw:touched(fakeFurtherMovingTouch)
-    _:expect("--h: multiple cards touched don't create multiple stacks", #debugDraw.stacks).is(rightNumStacks)
-    _:expect("--i: third card touched is also added", stackWithRightBody).has(card3.body)
-    
-    local notInStack = true
-    for _, stack in ipairs(debugDraw.stacks) do
-        if stack[1] == card.body then
-            notInStack = false
-        end
-    end
-    
-    --have to end touch to test moving the top card off a stack. So that should go in a separate test function.
-    
-    _:expect("--j: card moved away from others is removed from stack", (stackIdGone and notInStack)).is(true)
-    --   _:expect("--b: after CANCELLED touchMap touch is gone", touchMapIsNil).is(true)
-    --change touchMap's body to a table of bodies that holds all bodies in a stack...? or not because theres a quicker way that's less elegant but will work...followers to a single table stored in a touchMap's body, so that can directly become a stack...
-    --  a touch map counts stacked cards and creates a badge
-    -- badge vanishes if too many cards misaligned? badge counts down as cards are moved off it...
-    CodeaUnit.doBeforeAndAfter = false
-end)
-
-_:test("stack separation", function()
-    --gotta make a stack artificslly here
-    _:expect(stackIdGone and notInStack).is(true)
-end)
-
-_:test("removeBody reduces body count", function()
-    local originalCount = #debugDraw.bodies
-    local testCircle = createCircle(300, 150, 10)
-    debugDraw:removeBody(testCircle)
-    --gotta make a stack artificslly here
-    _:expect(#debugDraw.bodies).is(originalCount)
-end)
-
-_:test("removeAndDestroyThoughYouStillGottaNilManually destroys body", function() 
-    local countBeforeCircle = #debugDraw.bodies
-    local testCircle = createCircle(300, 150, 10)
-    debugDraw:removeAndDestroyThoughYouStillGottaNilManually(testCircle)
-    testCircle = nil
-    _:expect(testCircle == nil).is(true)
-end)
-end)
-end]]
