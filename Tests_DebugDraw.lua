@@ -1,4 +1,4 @@
-function testPhysicsDebug()
+--[[function testPhysicsDebug()
     
     CodeaUnit.detailed = true
     CodeaUnit.skip = true
@@ -158,12 +158,7 @@ function testPhysicsDebug()
             then
                 print(cardTable.stacks[1][1].shortName.." "..tostring(cardTable.stacks[1][1].position))
                 --local pos = stack[1].position
-                --[[
-                for i, v in ipairs( cardTable.stacks[1]) do
-                    print(tostring(cardTable.cardPosUtility))
-                    print(tostring(v.shortName).." "..tostring(v.position)..tostring(v.owningClass))
-                end
-            ]]
+
         local s = debug.getinfo(2).short_src
         print(s .. ":" .. line)
         print("------")
@@ -307,4 +302,4 @@ _:test("removeAndDestroyThoughYouStillGottaNilManually destroys body", function(
     _:expect(testCircle == nil).is(true)
 end)
 end)
-end
+end]]

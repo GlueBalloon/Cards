@@ -5,6 +5,7 @@ function setup()
     --one globals global to rule them all
     G = {}
     G.physics = PhysicsLab()
+    G.gcHandler = CodeaGCHandler()
     debugDraw = PhysicsDebugDraw()
     table.insert(debugDraw.touchMapFunctions, bestTouch)
     table.insert(debugDraw.touchMapFunctions, testForPickupMode)

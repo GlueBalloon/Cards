@@ -1,4 +1,4 @@
-function testRootFunctions()
+--[[function testRootFunctions()
     CodeaUnit.detailed = true
     CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
@@ -47,10 +47,7 @@ function testRootFunctions()
                     result = false
                 end
             end
-            --[[
-            print(isarray(testTable))
-            print(table.unpack(testTable))
-        ]]
+
     if #testTable ~= #correctResult then result = false end
     _:expect(result == true and #testTable ~= 0).is(true)
 end)
@@ -151,4 +148,4 @@ _:test("separateArrayAndHashTablesIn(...) returns correct tables", function()
     _:expect(totalResult).is(true)
 end)
 end)
-end
+end]]
