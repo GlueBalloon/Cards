@@ -4,20 +4,30 @@ CodeaGCHandler = class()
 
 function CodeaGCHandler:init()
     self.isAuthenticated = false
-    self.isInMatch = false
+    self.isMatching = false
+    self.inMatch = false
     self.isHosting = false
 end
 
-function CodeaGCHandler:checkAuthentication()
-    checkAuthentication()
+function CodeaGCHandler:syncAuthenticationStatus()
+    if checkAuthentication() == 1 then --can I pass bool?
+        self.isAuthenticated = true
+    else
+        self.isAuthenticated = false
+    end 
 end
 
 function CodeaGCHandler:startMatching()
     startMatching()
+    self.isMatching = true
 end
 
-function CodeaGCHandler:checkMatching()
-    checkMatching()
+function CodeaGCHandler:syncMatchingStatus()
+    if checkMatching() == 1 then --can I pass bool?
+        self.inMatch = true
+    else
+        self.inMatch = false
+    end 
 end
 
 function CodeaGCHandler:checkHosting()

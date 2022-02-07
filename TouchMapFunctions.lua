@@ -85,7 +85,7 @@ function bestTouch(touchMap)
     end
 end
     
-function testForPickupMode(touchMap)
+function checkForPickupMode(touchMap)
     for touchId, mappedTouch in pairs(touchMap) do
         if (mappedTouch.tp == mappedTouch.startPoint) and 
             (ElapsedTime - mappedTouch.startTime > 0.5) then

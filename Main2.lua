@@ -8,7 +8,7 @@ function setup()
     G.gcHandler = CodeaGCHandler()
     debugDraw = PhysicsDebugDraw()
     table.insert(debugDraw.touchMapFunctions, bestTouch)
-    table.insert(debugDraw.touchMapFunctions, testForPickupMode)
+    table.insert(debugDraw.touchMapFunctions, checkForPickupMode)
     cardTable = CardTable()
     G.cardTable = cardTable
     for i=1, #cardTable.bounds do

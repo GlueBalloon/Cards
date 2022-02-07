@@ -1,6 +1,6 @@
 function testRootFunctions()
     CodeaUnit.detailed = true
-    CodeaUnit.skip = true
+    CodeaUnit.skip = false
     -- local shouldWipeDebugDraw = false
     
     _:describe("Testing root functions", function()
