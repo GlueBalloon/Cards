@@ -3,31 +3,48 @@
 CodeaGCHandler = class()
 
 function CodeaGCHandler:init()
-    self.isAuthenticated = false
+    self:defaultAllFlags()
+    self.nickname = ""
+    self.hostName = ""
+end
+
+function CodeaGCHandler:defaultAllFlags()
+    self.attemptingAuthentication = false
+    self.authenticationStatus = false
     self.isMatching = false
     self.inMatch = false
     self.isHosting = false
 end
 
-function CodeaGCHandler:syncAuthenticationStatus()
-    if checkAuthentication() == 1 then --can I pass bool?
-        self.isAuthenticated = true
-    else
-        self.isAuthenticated = false
-    end 
+function CodeaGCHandler:gcAuthenticate()
+    if not self.authenticationStatus then
+        self.attemptingAuthentication = true
+        gcAuthenticate()
+    end
+end
+
+function CodeaGCHandler:gcAuthenticationFinished(successFlag)
+    if successFlag == 1 then
+        self.authenticationStatus = true 
+    else 
+        self.authenticationStatus = false 
+    end
+    self.attemptingAuthentication = false
 end
 
 function CodeaGCHandler:startMatching()
+    if not self.authenticationStatus then return end
     startMatching()
     self.isMatching = true
 end
 
-function CodeaGCHandler:syncMatchingStatus()
-    if checkMatching() == 1 then --can I pass bool?
-        self.inMatch = true
-    else
+function CodeaGCHandler:matchingFinished(int)
+    self.isMatching = false 
+    if int == 0 then
         self.inMatch = false
-    end 
+    elseif int == 1 then
+        self.inMatch = true
+    end
 end
 
 function CodeaGCHandler:checkHosting()
@@ -62,13 +79,35 @@ end
 --functions, these have to be globals for CodeaAddOn to link
 --to them
 
-function checkAuthentication()
-    
+--called FROM ObjC to have effects IN CODEA:
+function gcAuthenticationFinished(successFlag,  optionalGCHandler)
+    local GCH = optionalGCHandler or G.gcHandler
+    GCH:gcAuthenticationFinished(successFlag)
 end
 
-function startMatching()
-    
+function gcMatchingFinished(int, optionalGCHandler)
+    local GCH = optionalGCHandler or G.gcHandler
+    GCH:matchingFinished(int)
 end
+
+function gcNicknameFound(nickName, optionalGCHandler)
+    local GCH = optionalGCHandler or G.gcHandler
+    GCH.nickname = nickName
+end
+
+function gcHostAssigned(nickName, optionalGCHandler)
+    local GCH = optionalGCHandler or G.gcHandler
+    GCH.hostName = nickName
+end
+
+--called BY Codea for USE in ObjC--therefore bodies are empty:
+function gcAuthenticate()
+end
+
+function startMatching()    
+end
+
+
 
 function checkMatching()
     

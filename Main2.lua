@@ -220,7 +220,8 @@ function draw()
       ]]
     cardTable:draw()
     debugDraw:draw()
-
+    _:draw()
+    
     --[[
     local str = string.format("Test %d - %s", 1, currentTest.title)
 

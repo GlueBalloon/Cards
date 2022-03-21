@@ -49,6 +49,7 @@ function draw()
     text("extGetCount = "..myFirstAddon.extGetCount(),40,400)
     myFirstAddon.extIncCount()
     
+    _:draw()
 
     if showDumbEllipse then
         ellipse(WIDTH/2, HEIGHT/2, WIDTH/3)

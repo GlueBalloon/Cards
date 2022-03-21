@@ -49,6 +49,7 @@ end
 function CardTable:addCard(card)
  --   print("adding card ", card, card.body.shortName)
     table.insert(self.cards, card)
+    self.cards[card.body.shortName] = card
     self.cardsWithBodiesAsKeys[card.body] = card
 end
 

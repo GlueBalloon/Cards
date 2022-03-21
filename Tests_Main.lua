@@ -29,12 +29,19 @@ function testRootFunctions()
             local result = true
             for i=1, #testTable do
                 if testTable[i] ~= correctResult[i] then
+                    print("unmatched item")
+                    print(testTable[i], correctResult[i])
                     result = false
                 end
             end
-            --print(table.unpack(testTable))
-            if #testTable ~= #correctResult then result = false end
-            _:expect(result).is(true)
+            print(table.unpack(testTable))
+            print(#testTable, #correctResult)
+            if #testTable ~= #correctResult then 
+                print("wrong count")
+                result = false 
+            end
+            print(result)
+            _:expect(true).is(result)
         end)
         
         _:test("remove(...) extracts right number from array", function()

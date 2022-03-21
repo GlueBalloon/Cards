@@ -12,10 +12,11 @@
 		<string>Card</string>
 		<string>CardStacker</string>
 		<string>Main</string>
+		<string>Globals</string>
 		<string>Main2</string>
+		<string>Tests_Main</string>
 		<string>CodeaUnit</string>
 		<string>Tests_DebugDraw</string>
-		<string>Tests_Main</string>
 		<string>Tests_CardTable</string>
 		<string>Tests_CardStacker</string>
 		<string>Tests_Card</string>

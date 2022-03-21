@@ -1,174 +1,16 @@
 --from an original by jakesankey
---[[
-CodeaUnit = class()
-CodeaUnit.isRunning = false
-CodeaUnit.doBeforeAndAfter = true
-
-function CodeaUnit:describe(feature, allTests)
-    print(string.format("\t****\n\t%s\n\t****", feature))
-    if self.skip == true then
-        print("\t * Tests Skipped")
-    else
-        self.tests = 0
-        self.ignored = 0
-        self.failures = 0
-        self._before = function()
-        end
-        self._after = function()
-        end
-        
-        allTests()
-        
-        local passed = self.tests - self.failures - self.ignored
-        local summary = string.format("\t\t\t----------\n\t\t\tPass: %d\n\t\t\tIgnore: %d\n\t\t\tFail: %d", passed, self.ignored, self.failures)
-        
-        print(summary)
-    end
-end
-
-function CodeaUnit:before(setup)
-    self._before = setup
-end
-
-function CodeaUnit:after(teardown)
-    self._after = teardown
-end
-
-function CodeaUnit:ignore(description, scenario)
-    self.description = tostring(description or "")
-    self.tests = self.tests + 1
-    self.ignored = self.ignored + 1
-    if CodeaUnit.detailed then
-        print(string.format("%d: %s -- Ignored", self.tests, self.description))
-    end
-end
-
-function CodeaUnit:test(description, scenario)
-    self.description = tostring(description or "")
-    self.tests = self.tests + 1
-    self._before()
-    local status, err = pcall(scenario)
-    if err then
-        self.failures = self.failures + 1
-        print(string.format("%d: %s -- %s", self.tests, self.description, err))
-    end
-    self._after()
-end
-
---function CodeaUnit:expect(conditional)
---takes one or two arguments
---can take just the expected value, or a name for this individual 'expect' call plus the expected value
---if a name is given it will be used instead of the description of this individual test
---this allows multiple 'expect' calls in a single test to all show different titles
-function CodeaUnit:expect(...)
-    local args = {...}
-    local message
-    if #args == 1 then
-        --if only one argument, it's the condition, and this report uses the overall test name
-        conditional = args[1]
-        message = string.format("%d: %s", (self.tests or 1), self.description)
-    elseif #args == 2 then
-        --if two arguments, the first is this specific 'expect' test's name
-        conditional = args[2]
-        message = string.format("%d: %s", (self.tests or 1), args[1])
-    end
-    
-    local passed = function()
-        if CodeaUnit.detailed then
-            print(string.format("%s\nExpected: %s\n-- OK", message, self.expected))
-        end
-    end
-    
-    local failed = function()
-        self.failures = self.failures + 1
-        local actual = tostring(conditional)
-        local expected = tostring(self.expected)
-        print(string.format("%s:\nExpected: %s\n-- FAIL: got %s", message, expected, actual))
-    end
-    
-    local notify = function(result)
-        if result then
-            passed()
-        else
-            failed()
-        end
-    end
-    
-    local is = function(expected)
-        self.expected = expected
-        notify(conditional == expected)
-    end
-    
-    local isnt = function(expected)
-        self.expected = expected
-        notify(conditional ~= expected)
-    end
-    
-    local has = function(expected)
-        self.expected = expected
-        local found = false
-        for i,v in pairs(conditional) do
-            if v == expected then
-                found = true
-            end
-        end
-        if not found then
-            conditional = "no such value"
-        end
-        notify(found)
-    end
-    
-    local throws = function(expected)
-        self.expected = expected
-        local status, error = pcall(conditional)
-        if not error then
-            conditional = "nothing thrown"
-            notify(false)
-        else
-            notify(string.find(error, expected, 1, true))
-        end
-    end
-    
-    return {
-    is = is,
-    isnt = isnt,
-    has = has,
-    throws = throws
-    }
-end
-
-CodeaUnit.execute = function()
-    CodeaUnit.isRunning = true
-    for i,v in pairs(listProjectTabs()) do
-        local source = readProjectTab(v)
-        for match in string.gmatch(source, "function%s-(test.-%(%))") do
-            load(match)()
-        end
-    end
-end
-
-CodeaUnit.detailed = true
-
-
-
-_ = CodeaUnit()
-
-parameter.action("CodeaUnit Runner", function()
-    CodeaUnit.execute()
-end)
-]]
---from an original by jakesankey
 
 CodeaUnit = class()
 CodeaUnit.isRunning = false
 CodeaUnit.doBeforeAndAfter = true
+CodeaUnit.overallSummary = {passed = 0, failed = 0, ignored = 0}
 
 function CodeaUnit:describe(feature, allTests)
-    print(string.format("\t****\n\t%s\n\t****", feature))
-    if self.skip == true then
-        print("\t * Tests Skipped")
+    if self.skip then
+        print(string.format(" -------------\n|\n| %s\n| (Skipped)\n|\n -------------", feature))
     else
-        self.tests = 0
+        print(string.format(" -------------\n|\n| %s\n|\n -------------", feature))
+        self.testNum = 0
         self.subtests = 0
         self.totalTests = 0
         self.ignored = 0
@@ -183,9 +25,18 @@ function CodeaUnit:describe(feature, allTests)
         allTests()
         
         local passed = self.totalTests - self.failures
-        local summary = string.format("\t\t\t----------\n\t\t\tPass: %d\n\t\t\tIgnore: %d\n\t\t\tFail: %d", passed, self.ignored, self.failures)
+        self.overallSummary.passed = self.overallSummary.passed + passed
+        self.overallSummary.failed = self.overallSummary.failed + self.failures
+        self.overallSummary.ignored = self.overallSummary.ignored + self.ignored
+        local summary = string.format("\t----------\n\tPass: %d\n\tIgnore: %d\n\tFail: %d", passed, self.ignored, self.failures)
         
         print(summary)
+    end
+end
+
+function CodeaUnit:debugPrint(...)
+    if self.debugReporting then
+        print(...)
     end
 end
 
@@ -199,30 +50,22 @@ end
 
 function CodeaUnit:ignore(description, scenario)
     self.description = tostring(description or "")
-    self.tests = self.tests + 1
+    self.testNum = self.testNum + 1
     self.ignored = self.ignored + 1
     if CodeaUnit.detailed then
-        print(string.format("%d: %s -- Ignored", self.tests, self.description))
+        print(string.format("%d: %s -- Ignored", self.testNum, self.description))
     end
 end
 
 function CodeaUnit:test(description, scenario)
-    
-    self.tests = self.tests + 1
+    self.testNum = self.testNum + 1
     self.totalTests = self.totalTests + 1
     self._before()
-    
-    local beforeString = "__________________\n*** First. CodeaUnit:test(...) description before assignment: "..tostring(self.description)
     self.description = tostring(description or "")
-    local afterString = "*** CodeaUnit:test(...) description after assignment: "..tostring(self.description)
-    if self.debugReporting then
-        print(string.format("%s\n%s", beforeString, afterString))
-    end    
-    
     local status, err = pcall(scenario)
     if err then
         self.failures = self.failures + 1
-        print(string.format("%d: %s -- %s", self.tests, self.description, err))
+        print(string.format("%d: %s -- %s", self.testNum, self.description, err))
     end
     self._after()
     if self.subtests ~= 0 then
@@ -238,24 +81,40 @@ end
 --can take just the expected value, or a name for this individual 'expect' call plus the expected value
 --this allows multiple 'expect' calls in a single test to all show different titles
 function CodeaUnit:expect(...)
-    
-    local encoding = "abcdefghijklmnopqrstuvwxyz"
+    --set local variables
+    local args = {...}
+    local expectationString = "Expected"
+    local multiTest = false
+    local thisExpectTitle = nil
+    local conditional = nil
+    --function to turn all args into strings (including nil)
+    local argsToStrings = function(...)
+        local given = {...}
+        local argsAsStrings = {}
+        local numArgs = select("#", ...)
+        for i = 1, numArgs do
+            self:debugPrint("arg "..i..": ", tostring(given[i]))
+            table.insert(argsAsStrings, tostring(given[i]))
+        end
+        return argsAsStrings
+    end
+    --function for turning a number into a letter
     local function letterFromNum(i)
+        local encoding = "abcdefghijklmnopqrstuvwxyz"
         return encoding:sub(i,i)
     end
+    --get all args as strings
+    local argStrings = argsToStrings(...)
+    --set multitest and thisExpectTitle
+    if #argStrings == 2 then 
+        multiTest = true 
+        thisExpectTitle = argStrings[1]
+    end 
     
-    --detecting #args will mess up if expected value has returned nil, because nil isn't counted as a value
-    local args = {...}
-    if #args == 2 then multiTest = true end 
-    local unpackedArgs = tostring(table.unpack(args))
-    if self.debugReporting then
-        local descriptionString = "*** Second. CodeaUnit:expect(...) self.description: "..tostring(self.description)
-        local argsExplained = "*** CodeaUnit:expect(...) args: "..#args..", unpacked: "..unpackedArgs
-        print(string.format("%s\n%s", descriptionString, argsExplained))
-    end
-    self.message = string.format("%d. %s:", (self.tests or 1), self.description)
+    self.message = string.format("%d. %s:", (self.testNum or 1), self.description)
     if not multiTest then
         conditional = args[1]
+        self:debugPrint("not multitest, conditional: ", conditional)
     elseif #args == 2 then
         local premessage = ""
         self.subtests = self.subtests + 1
@@ -263,12 +122,12 @@ function CodeaUnit:expect(...)
             premessage = string.format("%s\n\n", self.message)
         end
         conditional = args[2]
-        self.message = string.format("%s %d.%s. %s", premessage, (self.tests or 1), letterFromNum(self.subtests), args[1])
+        self.message = string.format("%s -- %d%s. %s", premessage, (self.testNum or 1), letterFromNum(self.subtests), args[1])
     end
     
     local passed = function()
         if CodeaUnit.detailed then
-            print(string.format("%s\n  Expected: %s\n  -- OK", self.message, self.expected))
+            print(string.format("%s\n  %s: %s\n  -- OK", self.message, expectationString, self.expected))
         end
     end
     
@@ -276,13 +135,10 @@ function CodeaUnit:expect(...)
         self.failures = self.failures + 1
         local actual = tostring(conditional)
         local expected = tostring(self.expected)
-        print(string.format("%s\n  Expected: %s\n  -- FAIL: found %s", self.message, expected, actual))
+        print(string.format("%s\n  %s: %s\n  -- FAIL: found %s", self.message, expectationString, expected, actual))
     end
     
     local notify = function(result)
-        if self.debugReporting then
-            print("notify() message: "..tostring(self.message)..", self.expected: "..tostring(self.expected))
-        end
         if result then
             passed()
         else
@@ -290,17 +146,26 @@ function CodeaUnit:expect(...)
         end
     end
     
-    local is = function(expected)
-        self.expected = expected 
-        notify(conditional == expected)
+    local is = function(expected, epsilon)
+        
+        self.expected = expected
+        if epsilon then
+            expectationString = "Expected (epsilon "..tostring(epsilon)..")"
+            notify(expected - epsilon <= conditional and conditional <= expected + epsilon)
+        else
+            expectationString = "Expected"
+            notify(conditional == expected)
+        end
     end
     
     local isnt = function(expected)
+        expectationString = "Expected not"
         self.expected = expected
         notify(conditional ~= expected)
     end
     
     local has = function(expected)
+        expectationString = "Expected to include"
         self.expected = expected
         local found = false
         for i,v in pairs(conditional) do
@@ -315,6 +180,7 @@ function CodeaUnit:expect(...)
     end
     
     local throws = function(expected)
+        expectationString = "Expected throws"
         self.expected = expected
         local status, error = pcall(conditional)
         if not error then
@@ -333,6 +199,32 @@ function CodeaUnit:expect(...)
     }
 end
 
+function CodeaUnit:draw()
+    if self.overallSummary.passed ~= 0 
+    or self.overallSummary.failed ~= 0
+    or self.overallSummary.ignored ~= 0 then
+        pushStyle()
+        fill(181)
+        if self.overallSummary.failed > 0 then 
+            fill(255, 14, 0)
+        elseif self.overallSummary.passed > 0 then
+            fill(59, 255, 0)
+        end
+        font("AmericanTypewriter-Bold")
+        fontSize(WIDTH * 0.02)
+        textAlign(CENTER)
+        local drawString = "Test Summary\npassed: "..
+        tostring(self.overallSummary.passed)..
+        "\nfailed: "..tostring(self.overallSummary.failed)..
+        "\nignored: "..tostring(self.overallSummary.ignored)
+        local w, h = textSize(drawString)
+        text("Test Summary\npassed: "..tostring(self.overallSummary.passed)..
+        "\nfailed: "..tostring(self.overallSummary.failed)..
+        "\nignored: "..tostring(self.overallSummary.ignored), WIDTH / 2, HEIGHT - (h) )
+        popStyle()
+    end
+end
+
 CodeaUnit.execute = function()
     CodeaUnit.isRunning = true
     for i,v in pairs(listProjectTabs()) do
@@ -350,7 +242,36 @@ CodeaUnit.detailed = true
 _ = CodeaUnit()
 
 parameter.action("CodeaUnit Runner", function()
-    CodeaUnit.execute()
+    _.overallSummary = {passed = 0, failed = 0, ignored = 0}
+    _.execute()
 end)
 
-
+--[[
+function te stCodeaUnitFunctionality()
+    _.detailed = false
+    _.skip = false
+    
+    _:describe("CodeaUnit tests", function()
+        
+        _:before(function()
+        end)
+        
+        _:after(function()
+        end)
+        
+        _:test("HOOKUP", function()
+            _:expect("testing fooness", "Bar").is("Bar")
+        end)
+        
+        _:test("Floating point epsilon", function()
+            _:expect(1.45).is(1.5, 0.1)
+        end)
+        
+        _:test("can set testInt", function()
+            local testInt = 4
+            _:expect(testInt).is(4)
+        end)
+        
+    end)
+end
+]]
