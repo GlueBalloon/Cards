@@ -101,7 +101,7 @@ end
 function testCard()
     
     CodeaUnit.detailed = false
-    CodeaUnit.skip = false
+    CodeaUnit.skip = true
     
     _:describe("Testing Card", function()
         

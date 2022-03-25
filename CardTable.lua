@@ -102,7 +102,7 @@ end
 function CardTable:destroyContents()
     self.stacker:clearContents()
     for key, card in pairs(self.cards) do
-        --self.cards[key] = nil
+        self.cards[key] = nil
         --card:destroy()
     end
     for key, bound in pairs(self.bounds) do
@@ -232,7 +232,7 @@ end
 
 function testCardTable()
     
-    CodeaUnit.detailed = false
+    CodeaUnit.detailed = true
     CodeaUnit.skip = false
     
     _:describe("Testing Card Table", function()
@@ -273,7 +273,38 @@ function testCardTable()
             _:expect(rightTotals).is(true)
         end)
         
-        _:test("destroyContents() destroys contents", function()
+        _:test("destroyContents() destroys cards", function()
+            --arrange
+            local deckIsEmpty, contentsStrings = true, {}
+            local startingPhysicsBodiesCount = #physics.bodies
+            local noContentsStringInPhysicsBodies = true
+            for _, v in pairs(cardTable.cards) do
+                if v.body then
+                    table.insert(contentsStrings, tostring(v.body))
+                end
+            end
+            --act
+            cardTable:destroyContents()
+            for _, value in pairs(cardTable.cards) do
+                if value then 
+                    deckIsEmpty = false 
+                    break
+                end
+            end
+            for _, value in pairs(contentsStrings) do
+                for _, v in pairs(physics.bodies) do
+                    if value == tostring(v) then
+                        noContentsStringInPhysicsBodies = false
+                    end
+                end
+            end
+            _:expect("deckIsEmpty is true", deckIsEmpty).is(true)
+            _:expect("number of physicsBodies is reduced by cards destroyed", #physics.bodies).is(startingPhysicsBodiesCount - #contentsStrings)
+            _:expect("noContentsStringInPhysicsBodies", noContentsStringInPhysicsBodies).is(true)
+        end)
+        
+        --[[
+        _:test("destroyContents() destroys cards", function()
             print("#physics.bodies ", #physics.bodies)
             --arrange
             local deckIsEmpty, cardsWithBodiesAsKeysIsEmpty = true, true
@@ -310,6 +341,7 @@ function testCardTable()
             _:expect("cardsWithBodiesAsKeysIsEmpty is true", cardsWithBodiesAsKeysIsEmpty).is(true)
             _:expect("contentsStringFoundInPhysicsBodies is false", contentsStringFoundInPhysicsBodies).is(false)
         end)
+        ]]
         
         --[[
         _:test("detects swipe across stacks", function()
