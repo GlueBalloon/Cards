@@ -1,5 +1,3 @@
-
-
 CardStacker = class()
 
 function CardStacker:init(cards)
@@ -7,6 +5,11 @@ function CardStacker:init(cards)
     self.cards = cards
     self.radiusForStacking = self.cards[1].width * 0.3
     self:refreshStacks()
+end
+
+function CardStacker:clearContents()
+    self.stacks = {}
+    self.cards = {}
 end
 
 function CardStacker:cardsAreWithinDistance(card1, card2, maxDistance)
