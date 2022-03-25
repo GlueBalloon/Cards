@@ -9,12 +9,12 @@ CardTable.tableContainsCard = function (targetTable, card)
     else return false end
 end
 
-function CardTable:init()
+function CardTable:init(startingPosition)
     physics.gravity(0,0)
     self.bounds = self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    local deck = CardTable.makeDeck()
+    local deck = CardTable.makeDeck(startingPosition)
     for i, card in ipairs(deck) do
        -- physics:addBody(card.body)
         self:addCard(card)
@@ -61,13 +61,13 @@ end
 function CardTable:setup()
 end
 
-CardTable.makeDeck = function()
+CardTable.makeDeck = function(startingPosition)
     local deck = {}
     for i,suit in ipairs(Card.allSuits) do
         for rank=2, 13 do
-            table.insert(deck, Card(rank,suit))
+            table.insert(deck, Card(rank,suit,startingPosition))
         end
-        table.insert(deck, Card(1,suit)) --put the ace at the end
+        table.insert(deck, Card(1,suit,startingPosition)) --put the ace at the end
     end
     return deck
 end
@@ -95,25 +95,31 @@ function CardTable:createScreenBorders() --size is size of 3D box
     local allBounds = {boundsBottom,boundsRight,boundsTop,boundsLeft}
     for i=1, #allBounds do
         allBounds[i].type = STATIC
-        --physics:addBody(allBounds[i])
     end
     return allBounds
 end
 
-function CardTable:cleanup()
-    for key, body in pairs(physics.bodies) do
-        remove(physics.bodies, body)
-        self.cards[key] = nil
+function CardTable:destroyContents()
+    self.stacker:clearContents()
+    self.cardsWithBodiesAsKeys = {}
+    for key, card in pairs(self.cards) do
+        --self.cards[key] = nil
+        card.body:destroy()
+        card = nil
     end
-    physics:destroy()
-    --[[
-    for i, stack in ipairs(self.stacks) do
-        for i, card in ipairs(self.cards) do
-            card.body:destroy()
-            card = nil
-        end
+    for key, bound in pairs(self.bounds) do
+        self.bounds[key] = nil
+        bound:destroy()
     end
-      ]]
+    --self.cards = {}
+    --self.cardsWithBodiesAsKeys = {}
+end
+
+function CardTable:data()
+    local positions, angles = {}, {}
+    for _, card in ipairs(self.cards) do
+    end
+    return positions, angles
 end
 
 function CardTable:draw()
@@ -226,3 +232,79 @@ function CardTable:touched(touch, bodies, firstBodyTouched)
       ]]
 end
 
+function testCardTable()
+    
+    CodeaUnit.detailed = false
+    CodeaUnit.skip = false
+    
+    _:describe("Testing Card Table", function()
+        
+        local cardTable
+        
+        _:before(function()
+            cardTable = CardTable()
+        end)
+        
+        _:after(function()
+            cardTable:destroyContents()
+            cardTable = nil
+        end)
+        
+        _:test("does nothing", function()
+            _:expect(true).is(true)
+        end)
+        
+        _:test("makes 52 cards", function()
+            _:expect(#cardTable.cards).is(52)
+        end)
+        
+        _:test("makes right numbers of each suit", function()
+            local spades, hearts, diamonds, clubs = 0,0,0,0
+            for i,v in ipairs(cardTable.cards) do
+                if v.suit == "spades" then
+                    spades = spades + 1
+                elseif v.suit == "hearts" then
+                    hearts = hearts + 1
+                elseif v.suit == "diamonds" then
+                    diamonds = diamonds + 1
+                elseif v.suit == "clubs" then
+                    clubs = clubs + 1
+                end
+            end
+            local rightTotals = spades == 13 and hearts == 13 and diamonds == 13 and clubs == 13
+            _:expect(rightTotals).is(true)
+        end)
+        
+        _:test("destroyContents() destroys contents", function()
+            local deckIsEmpty, cardsWithBodiesAsKeysIsEmpty = true, true
+            for _, value in pairs(cardTable.deck) do
+                if value then deckIsEmpty = false end
+            end
+            for _, value in pairs(cardTable.cardsWithBodiesAsKeys) do
+                if value then cardsWithBodiesAsKeysIsEmpty = false end
+            end
+            _:expect("deckIsEmpty is true", deckIsEmpty).is(true)
+            _:expect("cardsWithBodiesAsKeysIsEmpty is true", cardsWithBodiesAsKeysIsEmpty).is(true)
+        end)
+        
+        --[[
+        _:test("detects swipe across stacks", function()
+            local randX = math.random(math.floor(WIDTH*0.1), math.floor(WIDTH*0.9))
+            local randY = math.random(math.floor(HEIGHT*0.1), math.floor(HEIGHT*0.9))
+            local topCard
+            for _, card in ipairs(G.cardTable.cards) do
+                if math.random(7) <= 2 then
+                    topCard = card
+                    card.body.position = vec2(randX, randY)
+                end
+            end
+            local swipeDist = G.cardTable.cards[1].width * 2
+            local fakeBeginTouch = fakeTouch(randX - swipeDist, randY, BEGAN, 1, 4373)
+            local fakeMovingTouch = fakeTouch(randX + swipeDist, randY, MOVING, 1, 4373, fakeBeginTouch.pos)
+            G.cardTable:touched(fakeBeginTouch)
+            G.cardTable:touched(fakeBeginTouch)
+            _:expect(false).is(true)
+        end)
+        ]]
+    end)
+end
