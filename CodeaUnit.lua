@@ -69,7 +69,7 @@ function CodeaUnit:test(description, scenario)
     end
     self._after()
     if self.subtests ~= 0 then
-        self.totalTests = self.totalTests + self.subtests - 1
+        self.totalTests = self.totalTests + self.subtests
     end
     self.subtests = 0
     self.description = nil
@@ -122,7 +122,7 @@ function CodeaUnit:expect(...)
             premessage = string.format("%s\n\n", self.message)
         end
         conditional = args[2]
-        self.message = string.format("%s -- %d%s. %s", premessage, (self.testNum or 1), letterFromNum(self.subtests), args[1])
+        self.message = string.format("%s %d%s. %s", premessage, (self.testNum or 1), letterFromNum(self.subtests), args[1])
     end
     
     local passed = function()
@@ -147,7 +147,7 @@ function CodeaUnit:expect(...)
     end
     
     local is = function(expected, epsilon)
-        
+
         self.expected = expected
         if epsilon then
             expectationString = "Expected (epsilon "..tostring(epsilon)..")"
@@ -242,12 +242,12 @@ CodeaUnit.detailed = true
 _ = CodeaUnit()
 
 parameter.action("CodeaUnit Runner", function()
-    _.overallSummary = {passed = 0, failed = 0, ignored = 0}
-    _.execute()
+    CodeaUnit.overallSummary = {passed = 0, failed = 0, ignored = 0}
+    CodeaUnit.execute()
 end)
 
 --[[
-function te stCodeaUnitFunctionality()
+function t estCodeaUnitFunctionality()
     _.detailed = false
     _.skip = false
     

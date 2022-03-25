@@ -1,6 +1,6 @@
 function testRootFunctions()
-    CodeaUnit.detailed = true
-    CodeaUnit.skip = false
+    CodeaUnit.detailed = false
+    CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
     
     _:describe("Testing root functions", function()
@@ -29,7 +29,7 @@ function testRootFunctions()
             local result = true
             for i=1, #testTable do
                 if testTable[i] ~= correctResult[i] then
-                    print("unmatched item")
+                    print("test found unmatched item:")
                     print(testTable[i], correctResult[i])
                     result = false
                 end
@@ -40,7 +40,6 @@ function testRootFunctions()
                 print("wrong count")
                 result = false 
             end
-            print(result)
             _:expect(true).is(result)
         end)
         
@@ -140,7 +139,7 @@ function testRootFunctions()
                 return returnString
             end
             --debugging statements: change to "if false" to turn off
-            if true then
+            if false then
                 print("correctArray: "..stringFrom(correctArray))
                 print("returnedArray: "..stringFrom(returnedArray))
                 print("correctHash: "..stringFrom(correctHash))

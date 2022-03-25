@@ -2,6 +2,13 @@
 
 
 function setup()
+    --holy shit, could convert card to body entirely:
+    bbb = physics.body(CIRCLE, 10)
+    function bbb:func()
+        print(self.position)
+        print("fooooooooo")
+    end
+    bbb:func()
     --one globals global to rule them all
     G = {}
     G.physics = PhysicsLab()

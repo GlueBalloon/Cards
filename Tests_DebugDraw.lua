@@ -1,6 +1,6 @@
 function testPhysicsDebug()
     
-    CodeaUnit.detailed = true
+    CodeaUnit.detailed = false
     CodeaUnit.skip = true
     -- local shouldWipeDebugDraw = false
     local card, card2, fakeBeginTouch, fakeMovingTouch, fakeEndTouch
