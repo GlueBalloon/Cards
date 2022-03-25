@@ -101,17 +101,15 @@ end
 
 function CardTable:destroyContents()
     self.stacker:clearContents()
-    self.cardsWithBodiesAsKeys = {}
     for key, card in pairs(self.cards) do
         --self.cards[key] = nil
-        card.body:destroy()
-        card = nil
+        --card:destroy()
     end
     for key, bound in pairs(self.bounds) do
-        self.bounds[key] = nil
+       -- self.bounds[key] = nil
         bound:destroy()
     end
-    --self.cards = {}
+   -- self.cards = {}
     --self.cardsWithBodiesAsKeys = {}
 end
 
@@ -276,15 +274,41 @@ function testCardTable()
         end)
         
         _:test("destroyContents() destroys contents", function()
+            print("#physics.bodies ", #physics.bodies)
+            --arrange
             local deckIsEmpty, cardsWithBodiesAsKeysIsEmpty = true, true
-            for _, value in pairs(cardTable.deck) do
+            local contentsStringFoundInPhysicsBodies = false
+            local contentsStrings = {}
+            for _, v in pairs(cardTable.cards) do
+               -- print(tostring(v))
+                table.insert(contentsStrings, tostring(v))
+            end
+            print("contentsStringFoundInPhysicsBodies: ", contentsStringFoundInPhysicsBodies)
+            --act
+            cardTable:destroyContents()
+            for _, value in pairs(cardTable.cards) do
                 if value then deckIsEmpty = false end
             end
             for _, value in pairs(cardTable.cardsWithBodiesAsKeys) do
                 if value then cardsWithBodiesAsKeysIsEmpty = false end
             end
+            print("contentsStringFoundInPhysicsBodies: ", contentsStringFoundInPhysicsBodies)
+            print("#physics.bodies ", #physics.bodies)
+            local bodiesMatched = 0
+            for _, value in pairs(contentsStrings) do
+                for _, v in pairs(physics.bodies) do
+                    if value == tostring(v) then
+                        bodiesMatched = bodiesMatched + 1
+                        contentsStringFoundInPhysicsBodies = true
+                        print("CardTable tests: contentsStringFoundInPhysicsBodies: ", value)
+                    end
+                end
+            end
+            print("contentsStringFoundInPhysicsBodies: ", contentsStringFoundInPhysicsBodies)
+            print("bodiesMatched: ", bodiesMatched)
             _:expect("deckIsEmpty is true", deckIsEmpty).is(true)
             _:expect("cardsWithBodiesAsKeysIsEmpty is true", cardsWithBodiesAsKeysIsEmpty).is(true)
+            _:expect("contentsStringFoundInPhysicsBodies is false", contentsStringFoundInPhysicsBodies).is(false)
         end)
         
         --[[
