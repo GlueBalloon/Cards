@@ -10,6 +10,7 @@
 		<string>TouchMapFunctions</string>
 		<string>CardTable</string>
 		<string>Card</string>
+		<string>Card_as_body</string>
 		<string>CardStacker</string>
 		<string>Main</string>
 		<string>Globals</string>
