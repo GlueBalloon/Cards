@@ -32,12 +32,10 @@ function Card:init(rank, suit, startingPosition)
     self.borderScale = vec2(self.width + borderSize, self.height + borderSize)
 end
 
-function Card:destroy()
-    self.body:destroy()
-    self = nil
-end
-
 function Card:draw()
+    if not self.body then
+        return
+    end
     pushStyle()
     pushMatrix()
     resetMatrix()

@@ -101,16 +101,20 @@ end
 
 function CardTable:destroyContents()
     self.stacker:clearContents()
+    self.cardsWithBodiesAsKeys = {}
     for key, card in pairs(self.cards) do
         self.cards[key] = nil
-        --card:destroy()
+        self.cardsWithBodiesAsKeys[card.body] = nil
+        card.body:destroy()
+        card = nil
+    end
+    for key, card in pairs(self.cards) do
+        self.cards[key] = nil
     end
     for key, bound in pairs(self.bounds) do
        -- self.bounds[key] = nil
         bound:destroy()
     end
-   -- self.cards = {}
-    --self.cardsWithBodiesAsKeys = {}
 end
 
 function CardTable:data()
@@ -274,6 +278,7 @@ function testCardTable()
         end)
         
         _:test("destroyContents() destroys cards", function()
+            debugDraw:clear()
             --arrange
             local deckIsEmpty, contentsStrings = true, {}
             local startingPhysicsBodiesCount = #physics.bodies
@@ -284,6 +289,7 @@ function testCardTable()
                 end
             end
             --act
+            print(#physics.bodies, " ", #contentsStrings, " ", #debugDraw.bodies)
             cardTable:destroyContents()
             for _, value in pairs(cardTable.cards) do
                 if value then 
@@ -292,9 +298,16 @@ function testCardTable()
                 end
             end
             for _, value in pairs(contentsStrings) do
-                for _, v in pairs(physics.bodies) do
+                for k, v in pairs(debugDraw.bodies) do
+                    if value == tostring(v) then
+                        debugDraw.bodies[k] = nil
+                        v:destroy()
+                    end
+                end
+                for i, v in pairs(physics.bodies) do
                     if value == tostring(v) then
                         noContentsStringInPhysicsBodies = false
+                        v:destroy()
                     end
                 end
             end

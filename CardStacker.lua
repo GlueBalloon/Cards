@@ -26,6 +26,9 @@ function CardStacker:tablesOfCardsCloserThan(maxDistance, cards)
         for i, thisTable in ipairs(cardsAtLocations) do
             local firstCardLocation = thisTable[1].body.position
             --if card is close enough, add it to the table
+            if not card or not card.body or not card.body.position then
+                goto skip
+            end
             if card.body.position:dist(firstCardLocation) <= maxDistance then
                 table.insert(thisTable, card)
                 --and hash the card to that table
@@ -33,6 +36,7 @@ function CardStacker:tablesOfCardsCloserThan(maxDistance, cards)
                 --and flip the flag
                 cardWasAddedToGroup = true
             end
+            ::skip::
         end
         --if card hasn't been put in a table, it's at its own location
         if not cardWasAddedToGroup then
