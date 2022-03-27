@@ -26,7 +26,7 @@ function Card:init(rank, suit, startingPosition)
     self.body.shortName = self:shortName()
     self.back = asset.cardBackMonkey
     self.face = asset[self:shortName()..".png"]
-    self.showing = self.back,mk
+    self.showing = self.back
     self.lastTouch = {}
     local borderSize = self.width / 10
     self.borderScale = vec2(self.width + borderSize, self.height + borderSize)
