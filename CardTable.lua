@@ -151,7 +151,6 @@ function CardTable:draw()
     end
 end
 
-
 function CardTable:touched(touch, bodies, firstBodyTouched)
     local indexOfFirstTouched
 --    print("table got a touch")

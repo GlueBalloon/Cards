@@ -1,23 +1,23 @@
-CardTableWithCardsAsBodies = class()
+CardTableForCardBodies = class()
 
-CardTableWithCardsAsBodies.tableContainsCard = function (targetTable, card)
+CardTableForCardBodies.tableContainsCard = function (targetTable, card)
     local set = {}
     for k, l in pairs(targetTable) do set[l] = true end
     if set[card] then return true
     else return false end
 end
 
-function CardTableWithCardsAsBodies:init(startingPosition)
+function CardTableForCardBodies:init(startingPosition)
     physics.gravity(0,0)
     self.bounds = self:createScreenBorders()
     self.cards={}
     self.cardsWithBodiesAsKeys = {}
-    local deck = CardTableWithCardsAsBodies.makeDeck(startingPosition)
+    local deck = CardTableForCardBodies.makeDeck(startingPosition)
     for i, card in ipairs(deck) do
         self:addCard(card)
         card.position = vec2(WIDTH/2, HEIGHT/2)
     end    
-    self.stacker = CardStackerWithCardsAsBodies(self.cards)
+    self.stacker = CardStackerForCardBodies(self.cards)
     parameter.action("List table cards", function()
         local cardsString = ""
         for key, card in pairs(self.cards) do
@@ -27,16 +27,16 @@ function CardTableWithCardsAsBodies:init(startingPosition)
     end)
 end
 
-function CardTableWithCardsAsBodies:addCard(card)
+function CardTableForCardBodies:addCard(card)
     table.insert(self.cards, card)
     self.cards[card.shortName] = card
 end
 
-function CardTableWithCardsAsBodies:removeCard(card)
+function CardTableForCardBodies:removeCard(card)
     remove(self.cards, card)
 end
 
-CardTableWithCardsAsBodies.makeDeck = function(startingPosition)
+CardTableForCardBodies.makeDeck = function(startingPosition)
     local deck = {}
     for i,suit in ipairs(makeCardAsBody().allSuits) do
         for rank=2, 13 do
@@ -47,7 +47,7 @@ CardTableWithCardsAsBodies.makeDeck = function(startingPosition)
     return deck
 end
 
-function CardTableWithCardsAsBodies:createScreenBorders() --size is size of 3D box
+function CardTableForCardBodies:createScreenBorders() --size is size of 3D box
     local boundsBottom = physics.body(EDGE, vec2(0,0), vec2(WIDTH,0))
     local boundsLeft = physics.body(EDGE, vec2(0,0), vec2(0,HEIGHT))
     local boundsRight = physics.body(EDGE, vec2(WIDTH,0), vec2(WIDTH,HEIGHT))
@@ -63,7 +63,7 @@ function CardTableWithCardsAsBodies:createScreenBorders() --size is size of 3D b
     return allBounds
 end
 
-function CardTableWithCardsAsBodies:destroyContents()
+function CardTableForCardBodies:destroyContents()
     self.stacker:clearContents()
     for key, card in pairs(self.cards) do
         self.cards[key] = nil
@@ -75,14 +75,14 @@ function CardTableWithCardsAsBodies:destroyContents()
     end
 end
 
-function CardTableWithCardsAsBodies:data()
+function CardTableForCardBodies:data()
     local positions, angles = {}, {}
     for _, card in ipairs(self.cards) do
     end
     return positions, angles
 end
 
-function CardTableWithCardsAsBodies:draw()
+function CardTableForCardBodies:draw()
     self.stacker:refreshStacks()
     tint(255, 136)
     sprite(asset.felt, WIDTH/2,HEIGHT/2,WIDTH,HEIGHT)
@@ -109,8 +109,15 @@ function CardTableWithCardsAsBodies:draw()
     end
 end
 
+function CardTableForCardBodies:pullCardBodiesFrom(thisTable)
+    
+end
 
-function CardTableWithCardsAsBodies:touched(touch, bodies, firstBodyTouched)
+function CardTableForCardBodies:matchCardOrderTo(thisTable)
+    
+end
+
+function CardTableForCardBodies:touched(touch, bodies, firstBodyTouched)
     local indexOfFirstTouched
     if bodies then
         local swapDeck = {}
@@ -131,12 +138,12 @@ function CardTableWithCardsAsBodies:touched(touch, bodies, firstBodyTouched)
     end
 end
 
-function testCardTableWithCardsAsBodies()
+function testCardTableForCardBodies()
     
     CodeaUnit.detailed = true
-    CodeaUnit.skip = true
+    CodeaUnit.skip = false
     
-    _:describe("Testing CardTableWithCardsAsBodies", function()
+    _:describe("Test TableForCardBodies", function()
         
         local cardTable
         
@@ -172,6 +179,14 @@ function testCardTableWithCardsAsBodies()
             end
             local rightTotals = spades == 13 and hearts == 13 and diamonds == 13 and clubs == 13
             _:expect(rightTotals).is(true)
+        end)
+        
+        _:test("pullCardBodiesFrom(thisTable) returns only card bodies", function()
+            _:expect(onlyCardBodiesFound).is(true)
+        end)
+        
+        _:test("matchCardOrderTo(thisTable) matches order", function()
+            _:expect(ordersMatch).is(true)
         end)
         
         _:test("destroyContents() destroys cards", function()

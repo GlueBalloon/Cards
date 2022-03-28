@@ -1,20 +1,21 @@
 
-PhysicsDebugDraw = class()
+DebugDrawForCardBodies = class()
 
-function PhysicsDebugDraw:init()
+function DebugDrawForCardBodies:init(cardTable)
     self.bodies = {}
     self.joints = {}
     self.touchMap = {}
     self.contacts = {}
     self.stacks = {}
     self.touchMapFunctions = {}
+    self.cardTable = cardTable or {}
     parameter.action("List DebugDraw bodies", function()
         print("debugDraw keys/identifiers: "..self:bodiesList())
     end)
     parameter.boolean("screenReport", false)
 end
 
-function PhysicsDebugDraw:addBody(body)
+function DebugDrawForCardBodies:addBody(body)
     -- print("adding"..body.shortName)
     for i, thisBody in ipairs(self.bodies) do
         if thisBody == body then
@@ -24,7 +25,7 @@ function PhysicsDebugDraw:addBody(body)
     self.bodies[#self.bodies+1] = body
 end
 
-function PhysicsDebugDraw:bodiesList()
+function DebugDrawForCardBodies:bodiesList()
     local cardsString = ""
     for key, body in pairs(self.bodies) do
         local identifier = body.shortName or body
@@ -33,16 +34,16 @@ function PhysicsDebugDraw:bodiesList()
     return cardsString
 end
 
-function PhysicsDebugDraw:removeBody(removeMe)
+function DebugDrawForCardBodies:removeBody(removeMe)
         remove(self.bodies, removeMe)
 end
 
-function PhysicsDebugDraw:removeAndDestroyThoughYouStillGottaNilManually(obliterateMe)
+function DebugDrawForCardBodies:removeAndDestroyThoughYouStillGottaNilManually(obliterateMe)
     self:removeBody(obliterateMe)
     obliterateMe:destroy()
 end
 
-function PhysicsDebugDraw:hasBody(verifyMe)
+function DebugDrawForCardBodies:hasBody(verifyMe)
     -- print("PhysicsDebugDraw:hasBody: iterating")
     local validKeys = {}
     for key, value in pairs(self.bodies) do
@@ -60,7 +61,7 @@ function PhysicsDebugDraw:hasBody(verifyMe)
     end
 end
 
-function PhysicsDebugDraw:addTouchToTouchMap(touch, body)
+function DebugDrawForCardBodies:addTouchToTouchMap(touch, body)
     local touchAnchor = body:getLocalPoint(touch.pos)
     self.touchMap[touch.id] = {
         tp = touch.pos,
@@ -72,11 +73,11 @@ function PhysicsDebugDraw:addTouchToTouchMap(touch, body)
     }
 end
 
-function PhysicsDebugDraw:addJoint(joint)
+function DebugDrawForCardBodies:addJoint(joint)
     table.insert(self.joints,joint)
 end
 
-function PhysicsDebugDraw:clear()
+function DebugDrawForCardBodies:clear()
     -- deactivate all bodies
     for i,body in ipairs(self.bodies) do
         body:destroy()
@@ -92,32 +93,16 @@ function PhysicsDebugDraw:clear()
     self.touchMap = {}
 end
 
-function PhysicsDebugDraw:draw()
+function DebugDrawForCardBodies:draw()
     
     if screenReport then
         pushStyle()
         fontSize(15)
-        --    local str, stacksString = self:bodiesList(), ""
+ 
         local xPos = WIDTH * 0.25
         textWrapWidth(WIDTH * 0.65)
         textMode(CORNER)
-        --[[
-        for k, v in pairs(self.stacks) do
-        stacksString = stacksString.."self.stacks["..stringIfBody(k).."] = "
-        if type(v) == "table" then
-        stacksString = stacksString.."{"
-        for kk, vv in pairs(v) do
-        local kkStr = stringIfBody(kk)
-        local vvStr = stringIfBody(vv)
-        stacksString = stacksString.." ["..kkStr.."] = "..vvStr.." "
-        end
-        stacksString = stacksString.."}"
-        else
-        stacksString = stacksString..stringIfBody(v)
-        end
-        stacksString = stacksString.."\n"
-        end
-        ]]
+
         str = "debug.bodies: "..tableToString(self.bodies, "", true)
         local _, strH = textSize(str)
         fill(255, 14, 0)
@@ -128,7 +113,7 @@ function PhysicsDebugDraw:draw()
         local _, touchStrH = textSize(touchStr)
         text(touchStr, xPos, HEIGHT - strH - 10 - touchStrH - 10)
         
-        stacksString = "stacks: "..tableToString(cardTable.stacker.stacks[1], "\n")
+        stacksString = "stacks: "..tableToString(self.cardTable.stacker.stacks[1], "\n")
         local _, stkStrH = textSize(stacksString)
         fill(92, 236, 67)
         text(stacksString, xPos, HEIGHT - strH - 10 - touchStrH - 10 - stkStrH - 20)
@@ -142,42 +127,7 @@ function PhysicsDebugDraw:draw()
         strokeWidth(5)
         stroke(128,0,128) -- purple
     end
-    
-    --[[
-    --why is the physics part of this in draw()?
-    --solve this by killing the touchMap if a touch reverses direction?
-    for touchId, mappedTouch in pairs(self.touchMap) do
-        --print("tracking "..touchId)
-        local gain = 100 --affects how far blocks go when flung
-        local damp = 8 --affects how quickly they slow down
-        local worldAnchor = mappedTouch.body:getWorldPoint(mappedTouch.anchor) --where the point the body was first touched is now in world coordinates
-        local touchPoint = mappedTouch.tp --where the actual touch is now
-        local diff = touchPoint - worldAnchor --distance as vec2
-        local vel = mappedTouch.body:getLinearVelocityFromWorldPoint(worldAnchor) --??
-        --v.body:applyForce( (1/1) * diff * gain - vel * damp, worldAnchor)
-        mappedTouch.body:applyForce( (1/1) * diff * gain - vel * damp, worldAnchor) --shove the body
-        line(touchPoint.x, touchPoint.y, worldAnchor.x, worldAnchor.y)
-        --apply a slightly different force to any cards following this touch
-        gain =  90
-        damp =  7
-        for _, body in ipairs(mappedTouch.followers) do
-            local angleDiff = body.angle - mappedTouch.body.angle
-            if angleDiff > 10 then
-                body:applyTorque(math.random(-840,-800))
-            elseif angleDiff < -10 then
-                body:applyTorque(math.random(800, 840))
-            end
-            worldAnchor = body:getWorldPoint(vec2(0,0)) --the center of the body in world coordinates
-            vel = body:getLinearVelocityFromWorldPoint(worldAnchor)
-            diff = touchPoint - worldAnchor
-            --print("follower is: "..body.shortName)
-            -- body.x, body.y, body.angle = mappedTouch.body.x, mappedTouch.body.y, mappedTouch.body.angle
-            body:applyForce( (1/1) * diff * gain - vel * damp, body:getWorldPoint(vec2(0,0))) --shove the body
-        end
-        
-    end
-    ]]
-    
+   
     for _, func in pairs(self.touchMapFunctions) do
         func(self.touchMap)
     end
@@ -195,12 +145,8 @@ function PhysicsDebugDraw:draw()
         stroke(255,255,255,255)
         noFill()
         
-        
-        
-        
         for i,body in ipairs(self.bodies) do
             pushMatrix()
-            
             
             if CodeaUnit.isRunning then 
                 if not body or not body.x then
@@ -265,10 +211,11 @@ function PhysicsDebugDraw:draw()
         end
     end
     
-    popStyle()   
+    popStyle()
+    
 end 
 
-function PhysicsDebugDraw:touched(touch)
+function DebugDrawForCardBodies:touched(touch)
     --grab the touch as a vec2
     local touchPoint = vec2(touch.pos.x, touch.pos.y)
     local firstBodyTouched
@@ -279,7 +226,7 @@ function PhysicsDebugDraw:touched(touch)
         for i=#self.bodies, 1, -1 do
             --check if body belongs to a card
             local body = self.bodies[i]
-            if body.owningClass == "card" then 
+            if body.class == "card" then 
                 --check if touch is indside body
                 if body.type == DYNAMIC and body:testPoint(touchPoint) then
                     --create touchMap for touch
@@ -300,7 +247,7 @@ function PhysicsDebugDraw:touched(touch)
         self.touchMap[touch.id].tp = touchPoint
         if not self.touchMap[touch.id].body.isPickerUpper then goto endOfStacking end
         for _,body in ipairs(self.bodies) do
-            if body.owningClass == "card" then
+            if body.class == "card" then
                 --print("moving, ",body.shortName, body.owningClass)
                 --make sure this touch is actually inside this body and this body isn't a leading body
                 if body.type == DYNAMIC and body:testPoint(touchPoint) and body ~= self.touchMap[touch.id].body then
@@ -328,46 +275,26 @@ function PhysicsDebugDraw:touched(touch)
         returnValue = true
         --delete any touchMap for an end touch
     elseif touch.state == ENDED and self.touchMap[touch.id] then
-        --move card from this touchMap to end of bodies table
-        --     local touchedBody = self.touchMap[touch.id].body
-        --not sure why this works
-        --   remove(self.bodies, touchedBody)
-        --    table.insert(self.bodies, 1, touchedBody)
+        self.touchMap[touch.id].body.lastTouch = nil
         if self.touchMap[touch.id].body:testPoint(touchPoint) then
             firstBodyTouched = self.touchMap[touch.id].body
         end
         self:clearTouchMap(touch)
-        --[[
-        for _, body in ipairs(self.bodies) do
-        body[math.floor(touch.id)] = nil --touch.id used as numeric key to indicate following
-        end
-        ]]
         returnValue = true
     elseif touch.state == CANCELLED then
-        --clear out remaining touchMaps and followings when any touch is cancelled
-        --[[
-        for key, map in pairs(self.touchMap) do
-        --   local flooredId = math.floor(map.id)
-        for _, body in pairs(self.bodies) do
-        --       if body[flooredId] then
-        --          body[flooredId] = nil
-        --     end
-        end
-        end
-        ]]
         self:clearTouchMap(touch)
     end
     
     if(returnValue == true) then
         --  print("sent touch to card table from debugDraw")
-        cardTable:touched(touch, self.bodies, firstBodyTouched)
+        self.cardTable:touched(touch, self.bodies, firstBodyTouched)
     end
 
     --print("PDD about to return value")
     return returnValue
 end
 
-function PhysicsDebugDraw:clearTouchMap(touch)
+function DebugDrawForCardBodies:clearTouchMap(touch)
     for _, body in ipairs(self.touchMap[touch.id].followers) do
         if body.keepSkew then body.keepSkew = nil end
         body.angularVelocity = self.touchMap[touch.id].body.angularVelocity
@@ -377,7 +304,7 @@ function PhysicsDebugDraw:clearTouchMap(touch)
     self.touchMap[touch.id] = nil
 end
 
-function PhysicsDebugDraw:collide(contact)
+function DebugDrawForCardBodies:collide(contact)
     if contact.state == BEGAN then
         self.contacts[contact.id] = contact
         -- sound(SOUND_HIT, 2643)

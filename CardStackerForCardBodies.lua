@@ -1,23 +1,23 @@
-CardStackerWithCardsAsBodies = class()
+CardStackerForCardBodies = class()
 
-function CardStackerWithCardsAsBodies:init(cards)
+function CardStackerForCardBodies:init(cards)
     self.stacks = {}
     self.cards = cards
     self.radiusForStacking = self.cards[1].cardWidth * 0.3
     self:refreshStacks()
 end
 
-function CardStackerWithCardsAsBodies:clearContents()
+function CardStackerForCardBodies:clearContents()
     self.stacks = {}
     self.cards = {}
 end
 
-function CardStackerWithCardsAsBodies:cardsAreWithinDistance(card1, card2, maxDistance)
+function CardStackerForCardBodies:cardsAreWithinDistance(card1, card2, maxDistance)
     local distance = card1.position:dist(card2.position)
     return distance <= maxDistance
 end
 
-function CardStackerWithCardsAsBodies:tablesOfCardsCloserThan(maxDistance, cards)
+function CardStackerForCardBodies:tablesOfCardsCloserThan(maxDistance, cards)
     local cardsAtLocations = {}
     for i, card in ipairs(cards) do
         --a flag for needing to create a new location
@@ -49,11 +49,11 @@ function CardStackerWithCardsAsBodies:tablesOfCardsCloserThan(maxDistance, cards
     return cardsAtLocations
 end
 
-function CardStackerWithCardsAsBodies:refreshStacks()
+function CardStackerForCardBodies:refreshStacks()
     self.stacks = self:tablesOfCardsCloserThan(self.radiusForStacking, self.cards)
 end
 
-function CardStackerWithCardsAsBodies:shuffle()
+function CardStackerForCardBodies:shuffle()
     for i = #self.cards, 2, -1 do
         local j = math.random(i)
         self.cards[i], self.cards[j] = self.cards[j], self.cards[i]

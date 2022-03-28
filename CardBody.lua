@@ -65,10 +65,19 @@ function makeCardAsBody(rank, suit, startingPosition, angle)
     end
     
     function newCard:touched(touch)
-        self.lastTouch = touch
-        local touchPoint = vec2(touch.pos.x, touch.pos.y)
-        local selfTapped = self:testPoint(touchPoint)
-        if selfTapped and touch.tapCount == 2 and touch.state == ENDED then
+        local selfTouched = self:testPoint(touch.pos)
+        if not selfTouched or touch.state == ENDED or
+        touch.state == CANCELLED then
+            self.lastTouch = nil
+        else
+            self.lastTouch = touch
+        end
+        self:showSideBasedOn(touch)
+    end
+    
+    
+    function newCard:showSideBasedOn(touch)
+        if touch.tapCount == 2 and touch.state == ENDED then
             if self.showing == self.back then
                 self.showing = self.face
             else
@@ -76,9 +85,17 @@ function makeCardAsBody(rank, suit, startingPosition, angle)
             end
         end
     end
-    
-    function newCard:positionAsNumber()
         
+    function newCard:positionToDecimalNumber()
+        local xAsNotDecimal = self.position.x - (self.position.x % 1)
+        local yAsDecimal = (self.position.y - (self.position.y % 1)) * 0.0001
+        return xAsNotDecimal + yAsDecimal
+    end
+    
+    function newCard:setPositionFromDecimalNumber(decimalNumber)
+        local numberAfterDecimal = decimalNumber % 1
+        local numberBeforeDecimal = decimalNumber - numberAfterDecimal
+        self.position = vec2(numberBeforeDecimal, numberAfterDecimal * 10000)
     end
     
     return newCard
@@ -94,23 +111,28 @@ function testCardAsBody()
         local card
         local fakedTouch
         local cardTable
+        local debugDraw
         
         _:before(function()
-            cardTable = CardTableWithCardsAsBodies()
+            cardTable = CardTableForCardBodies()
+            debugDrawForCardBodies = DebugDrawForCardBodies(cardTable)
             card = makeCardAsBody(7, "hearts")
+            card.shortName = "testCard"
             fakedTouch = fakeTouch()
-            debugDraw:addBody(card)
+            debugDrawForCardBodies:addBody(card)
             cardTable:addCard(card)
         end)
         
         _:after(function()
-            debugDraw.touchMap[fakedTouch.id] = nil
-            remove(debugDraw.bodies, card)
+            debugDrawForCardBodies.touchMap[fakedTouch.id] = nil
+            remove(debugDrawForCardBodies.bodies, card)
             cardTable:removeCard(card)
             card:destroy()
             fakedTouch = nil
             cardTable:destroyContents()
             cardTable = nil
+            debugDrawForCardBodies:clear()
+            debugDrawForCardBodies = nil
         end)
         
         _:test("init with (1, allSuits[1]) is ace of spades", function()
@@ -144,8 +166,13 @@ function testCardAsBody()
         _:test("card retains last touch", function()
             card:touched(fakedTouch)
             local retained = fakedTouch == card.lastTouch
-            _:expect("--a: touches aren't nil", fakedTouch ~= nil and card.lastTouch ~= nil).is(true)
-            _:expect("--b: card retains last touch", retained).is(true)
+            _:expect("touches aren't nil", fakedTouch ~= nil and card.lastTouch ~= nil).is(true)
+            _:expect("card retains last touch", retained).is(true)
+            fakedTouch.pos.x = card.x + card.cardWidth * 2
+            fakedTouch.pos.y = card.y + card.cardHeight * 2
+            card:touched(fakedTouch)
+            retained = fakedTouch == card.lastTouch
+            _:expect("card does not capture touch outside its bounds", retained).is(false)
         end)
         
         _:test("debugDraw sends BEGAN touch to card", function()
@@ -153,27 +180,28 @@ function testCardAsBody()
             card.y = HEIGHT * 0.95
             fakedTouch.pos.x = card.x +1
             fakedTouch.pos.y = card.y +1
-            debugDraw:touched(fakedTouch)
-            local gotFromDebug = fakedTouch == card.lastTouch
-            _:expect(gotFromDebug).is(true)
-        end)
-        
-        _:test("debugDraw sends ENDED touch to card", function()
-            card.x = WIDTH * 0.95
-            card.y = HEIGHT * 0.95
-            fakedTouch = fakeTouch(card.x +1, card.y +1, ENDED, 1)
-            debugDraw:addTouchToTouchMap(fakedTouch, card) --needed because this touchId won't be in touchmap because there was no beginning of it
-            debugDraw:touched(fakedTouch)
-            local gotFromDebug = fakedTouch == card.lastTouch
-            _:expect(gotFromDebug).is(true)
+            debugDrawForCardBodies:touched(fakedTouch)
+            local cardStoresTouch = fakedTouch == card.lastTouch
+            _:expect("touch captured when began", cardStoresTouch).is(true)
+            fakedTouch.state = ENDED
+            card:touched(fakedTouch)
+            cardStoresTouch = fakedTouch == card.lastTouch
+            _:expect("touch cleared when ENDED", cardStoresTouch == false).is(true)
+            fakedTouch.state = BEGAN
+            card:touched(fakedTouch)
+            cardStoresTouch = fakedTouch == card.lastTouch
+            _:expect("touch re-captured to set up next expectation", cardStoresTouch).is(true)
+            fakedTouch.state = CANCELLED
+            card:touched(fakedTouch)
+            cardStoresTouch = fakedTouch == card.lastTouch
+            _:expect("touch cleared when CANCELLED", cardStoresTouch == false).is(true)
         end)
         
         _:test("tap ending on card flips it over", function()
             card.showing = card.back
-            -- print(card.showing)
-            fakedTouch = fakeTouch(card.x +1, card.y +1, ENDED, 1)
-            debugDraw:addTouchToTouchMap(fakedTouch, card)
-            debugDraw:touched(fakedTouch)
+            fakedTouch = fakeTouch(card.x +1, card.y +1, ENDED, 2)
+            fakedTouch.tapCount = 2
+            card:touched(fakedTouch)
             --print(card.showing, card.face)
             _:expect(tostring(card.showing) == tostring(card.face)).is(true)
         end)   
@@ -181,11 +209,16 @@ function testCardAsBody()
         _:test("converting a position to a single number and back", function() 
             local randomX, randomY = math.random(WIDTH), math.random(HEIGHT)
             card.position = vec2(randomX, randomY)
-            local positionAsNumber = card:positionAsNumber()
+            local positionAsNumber = card:positionToDecimalNumber() or 0
             local numberAfterDecimal = positionAsNumber % 1
             local numberBeforeDecimal = positionAsNumber - numberAfterDecimal
-            _:expect("positionAsNumber() before decimal is randomX", numberBeforeDecimal).is(randomX) 
-            _:expect("positionAsNumber() after decimal is randomY", numberAfterDecimal).is(randomY)
+            _:expect("positionAsNumber() before decimal is randomX", numberBeforeDecimal).is(randomX, 0.1) 
+            _:expect("positionAsNumber() after decimal is randomY", numberAfterDecimal * 10000).is(randomY, 0.1)
+            local randomlySetX, randomlySetY = math.random(WIDTH), math.random(HEIGHT)
+            local numberForPosition = randomlySetX + ((randomlySetY) * 0.0001)
+            card:setPositionFromDecimalNumber(numberForPosition)
+            _:expect("setPositionFromDecimalNumber(number) sets correct x", card.x).is(randomlySetX, 0.1) 
+            _:expect("setPositionFromDecimalNumber(number) sets correct y", card.y).is(randomlySetY, 0.1)
         end)
     end)
 end
